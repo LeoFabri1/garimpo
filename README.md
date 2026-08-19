@@ -7,8 +7,8 @@ statistically exceptional.
 *Garimpo* is Portuguese for prospecting: sifting through tons of gravel
 to find the nugget.
 
-**Status:** Sprints 0–6. v0.1/v0.1.1 + LLM enrich scaffolding, `simulate`,
-`reparse`. Ver [docs/SPRINTS.md](docs/SPRINTS.md).
+**Status:** Sprints 0–9 scaffolded. MCP queries, webhook, export, panel localhost,
+category placeholders, telemetry opt-in (off). Ver [docs/SPRINTS.md](docs/SPRINTS.md).
 
 ## Aviso — leia antes de fazer login
 

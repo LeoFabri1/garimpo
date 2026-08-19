@@ -26,4 +26,8 @@ def build_client(settings: Settings) -> MTProtoClient:
             app_version=settings.telegram.app_version,
             session_string=session_string,
         )
-    raise ValueError(f"backend não suportado ainda: {backend}")
+    if backend == "pyrotgfork":
+        from garimpo.ingest.clients.pyro_client import PyroClient
+
+        return PyroClient()  # raises NotImplementedError with guidance
+    raise ValueError(f"backend não suportado: {backend}")

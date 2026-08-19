@@ -1,0 +1,19 @@
+{
+  "$schema": "../gpu.schema.json",
+  "meta": {
+    "perf_basis": "placeholder monotônico — curadoria comunitária",
+    "perf_reference": "placeholder = 100",
+    "updated_at": "2026-08-19",
+    "category": "cpu"
+  },
+  "products": {
+    "cpu_placeholder": {
+      "display": "CPU (placeholder)",
+      "vendor": "generic",
+      "perf": 100,
+      "price_range": [500, 5000],
+      "aliases": ["ryzen", "core i7", "core i9"],
+      "negative_aliases": []
+    }
+  }
+}

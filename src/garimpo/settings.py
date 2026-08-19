@@ -76,9 +76,14 @@ class BotSettings(BaseModel):
     chat_id_env: str = "TG_CHAT_ID"
 
 
+class WebhookSettings(BaseModel):
+    url_env: str = "WEBHOOK_URL"
+
+
 class AlertsSettings(BaseModel):
     channel: Literal["saved_messages", "bot", "webhook", "console"] = "console"
     bot: BotSettings | None = None
+    webhook: WebhookSettings | None = None
     critical: AlertLevelSettings = Field(
         default_factory=lambda: AlertLevelSettings(
             percentile=0.03, silent=False, min_store_trust=0.9

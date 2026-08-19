@@ -1,0 +1,19 @@
+{
+  "$schema": "../gpu.schema.json",
+  "meta": {
+    "perf_basis": "placeholder monotônico — curadoria comunitária",
+    "perf_reference": "placeholder = 100",
+    "updated_at": "2026-08-19",
+    "category": "notebook"
+  },
+  "products": {
+    "notebook_placeholder": {
+      "display": "Notebook (placeholder)",
+      "vendor": "generic",
+      "perf": 100,
+      "price_range": [2000, 15000],
+      "aliases": ["notebook gamer", "laptop"],
+      "negative_aliases": []
+    }
+  }
+}

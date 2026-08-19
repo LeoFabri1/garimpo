@@ -228,3 +228,44 @@ def reparse_cmd(
     settings = load_settings(config)
     n = reparse(settings, status=status, since_days=since, dry_run=True)
     typer.echo(f"reparse: {n} message(s) newly parsed")
+
+
+@app.command("export")
+def export_cmd(
+    out: Path = typer.Option(Path("precos.csv"), "--out", "-o"),
+    config: Path | None = typer.Option(
+        None, "--config", "-c", help="Path to config YAML."
+    ),
+) -> None:
+    """Export price_history to CSV."""
+    from garimpo.mcp.queries import export_price_history_csv
+    from garimpo.settings import load_settings
+
+    settings = load_settings(config)
+    n = export_price_history_csv(settings.storage.path, out)
+    typer.echo(f"exported {n} row(s) → {out}")
+
+
+@app.command("mcp")
+def mcp_cmd() -> None:
+    """Start read-only MCP server (separate process). Requires --extra mcp."""
+    from garimpo.mcp.server import main
+
+    main()
+
+
+@app.command("panel")
+def panel_cmd(
+    host: str = typer.Option("127.0.0.1", "--host"),
+    port: int = typer.Option(8765, "--port"),
+    config: Path | None = typer.Option(
+        None, "--config", "-c", help="Path to config YAML."
+    ),
+) -> None:
+    """Local read-only price panel (binds localhost by default)."""
+    from garimpo.settings import load_settings
+    from garimpo.web.panel import serve
+
+    settings = load_settings(config)
+    typer.echo(f"garimpo panel → http://{host}:{port}/  (Ctrl+C to stop)")
+    serve(settings.storage.path, host=host, port=port)

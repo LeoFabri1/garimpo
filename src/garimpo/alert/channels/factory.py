@@ -5,7 +5,7 @@ from __future__ import annotations
 from garimpo.alert.channels.base import Channel
 from garimpo.alert.channels.console import ConsoleChannel
 from garimpo.ingest.base import MTProtoClient
-from garimpo.settings import Settings
+from garimpo.settings import Settings, WebhookSettings
 
 
 def build_channel(
@@ -40,5 +40,14 @@ def build_channel(
         from garimpo.alert.channels.bot import BotChannel
 
         return BotChannel(token=token, chat_id=chat_id)
+
+    if settings.alerts.channel == "webhook":
+        wh = settings.alerts.webhook or WebhookSettings()
+        url = settings.env(wh.url_env)
+        if not url:
+            raise ValueError(f"Defina {wh.url_env} no .env para canal webhook")
+        from garimpo.alert.channels.webhook import WebhookChannel
+
+        return WebhookChannel(url=url)
 
     return ConsoleChannel()
