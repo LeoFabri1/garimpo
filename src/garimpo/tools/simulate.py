@@ -10,8 +10,8 @@ from decimal import Decimal
 
 from garimpo.catalog import ModelIndex, load_gpu_catalog
 from garimpo.models.offer import Offer, Price
-from garimpo.score import WatchRule, score_offer
-from garimpo.settings import Settings, WatchRuleConfig
+from garimpo.score import HistoryPoint, match_rule, score_offer, watch_rules_from_settings
+from garimpo.settings import Settings
 from garimpo.store.db import connect
 
 
@@ -25,7 +25,7 @@ class SimulateReport:
 def simulate(settings: Settings, *, days: int = 90) -> SimulateReport:
     catalog = load_gpu_catalog()
     index = ModelIndex(catalog)
-    rules = [_rule(cfg, index, settings) for cfg in settings.watch]
+    rules = watch_rules_from_settings(settings, index)
     conn = connect(settings.storage.path)
     try:
         since = (
@@ -57,11 +57,7 @@ def simulate(settings: Settings, *, days: int = 90) -> SimulateReport:
             except ValueError:
                 continue
             hist = _history(conn, offer.model_key, before=now)
-            matched = None
-            for rule in rules:
-                if rule.models is None or offer.model_key in rule.models:
-                    matched = rule
-                    break
+            matched = match_rule(offer.model_key, product.perf, rules, offer.store)
             if matched is None:
                 counts["ignore"] += 1
                 continue
@@ -73,6 +69,8 @@ def simulate(settings: Settings, *, days: int = 90) -> SimulateReport:
                 now=now,
                 store_trust=1.0,
                 min_samples=settings.scoring.min_samples,
+                window_days=settings.scoring.window_days,
+                half_life_days=settings.scoring.half_life_days,
             )
             counts[scored.level.value] += 1
         return SimulateReport(
@@ -84,26 +82,9 @@ def simulate(settings: Settings, *, days: int = 90) -> SimulateReport:
         conn.close()
 
 
-def _rule(cfg: WatchRuleConfig, index: ModelIndex, settings: Settings) -> WatchRule:
-    keys = None
-    if cfg.models:
-        resolved = set()
-        for name in cfg.models:
-            hit = index.resolve(name)
-            resolved.add(hit.model_key if hit else name.lower().replace(" ", "_"))
-        keys = frozenset(resolved)
-    return WatchRule(
-        name=cfg.name or "default",
-        max_price=cfg.max_price,
-        models=keys,
-        critical_percentile=settings.alerts.critical.percentile,
-        normal_percentile=settings.alerts.normal.percentile,
-    )
-
-
-def _history(conn: sqlite3.Connection, model_key: str, *, before: datetime):
-    from garimpo.score.baseline import HistoryPoint
-
+def _history(
+    conn: sqlite3.Connection, model_key: str, *, before: datetime
+) -> list[HistoryPoint]:
     rows = conn.execute(
         """
         SELECT price, observed_at, excluded FROM price_history

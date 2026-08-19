@@ -1,6 +1,6 @@
 # Example full configuration. Copy to config.yaml and edit.
 # Secrets stay in environment variables — never put tokens here.
-# Schema reference: DESIGN-2.md §15
+# Validate with: garimpo doctor
 
 telegram:
   backend: telethon           # telethon | pyrotgfork
@@ -31,7 +31,7 @@ watch:
       - "RTX 4070 Super"
       - "RX 7800 XT"
     max_price: 6000
-    condition: [new]
+    condition: [new]        # NOTE: not applied yet — stored on the offer, not filtered
     stores_exclude: ["marketplace_generico", "aliexpress"]
 
   # - name: notebook-gamer
@@ -48,6 +48,7 @@ scoring:
   window_days: 90
   half_life_days: 21
   min_samples: 12
+  # NOTE: not applied yet — outlier exclusion is not wired into the scoring path.
   outlier_mad_threshold: 3.0
 
 # Best for instant phone push: bot (BotFather + /start + chat_id).

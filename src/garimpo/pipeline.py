@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import hashlib
-import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from garimpo.alert.dispatcher import Dispatcher
 from garimpo.catalog import ModelIndex, load_catalog_for_watch, load_stores
@@ -15,13 +14,18 @@ from garimpo.models.raw import RawMessage
 from garimpo.parse.groups import ParserRegistry
 from garimpo.parse.text import normalize_for_hash
 from garimpo.parse.triage import passes_triage
-from garimpo.score import WatchRule, score_offer
-from garimpo.settings import Settings, WatchRuleConfig
+from garimpo.score import match_rule, score_offer, watch_rules_from_settings
+from garimpo.settings import Settings
 from garimpo.store.db import connect
 from garimpo.store.repo import alerts as alerts_repo
 from garimpo.store.repo import history as history_repo
 from garimpo.store.repo import messages as messages_repo
 from garimpo.store.repo import offers as offers_repo
+from garimpo.store.retention import purge_raw_noise
+
+if TYPE_CHECKING:
+    from garimpo.alert.channels.base import Channel
+    from garimpo.ingest.base import MTProtoClient
 
 
 @dataclass
@@ -32,28 +36,25 @@ class PipelineResult:
     scored: ScoredOffer | None = None
 
 
-_PERF_TIER = re.compile(r">=\s*([\d.]+)")
-
-
 class Pipeline:
     def __init__(
         self,
         settings: Settings,
         *,
-        channel: object | None = None,
+        channel: Channel | None = None,
         dry_run: bool = False,
-        client: object | None = None,
+        client: MTProtoClient | None = None,
     ) -> None:
         self.settings = settings
         self.dry_run = dry_run
         if channel is not None:
-            self.channel = channel  # type: ignore[assignment]
+            self.channel = channel
         else:
             from garimpo.alert.channels.factory import build_channel
 
             self.channel = build_channel(
                 settings,
-                client=client,  # type: ignore[arg-type]
+                client=client,
                 force_console=dry_run or settings.alerts.channel == "console",
             )
         categories = sorted(
@@ -64,16 +65,24 @@ class Pipeline:
         self.parsers = ParserRegistry(self.index)
         self.stores = load_stores()
         self.conn = connect(settings.storage.path)
-        self.rules = [_to_watch_rule(r, self.index) for r in settings.watch]
+        self.rules = watch_rules_from_settings(settings, self.index)
         self.dispatcher = Dispatcher(
             self.conn,
-            self.channel,  # type: ignore[arg-type]
+            self.channel,
             settings.alerts,
             dry_run=dry_run,
         )
 
     def close(self) -> None:
         self.conn.close()
+
+    def purge_expired(self, *, now: datetime | None = None) -> int:
+        """Drop triaged_out/duplicate raw rows past storage.retention_raw_days."""
+        return purge_raw_noise(
+            self.conn,
+            retention_days=self.settings.storage.retention_raw_days,
+            now=now,
+        )
 
     def process(self, msg: RawMessage) -> PipelineResult:
         now = msg.received_at
@@ -179,10 +188,11 @@ class Pipeline:
         # Exclude the point we just inserted from percentile bias? Keep it — it's real.
         store_trust = float(self.stores.get(offer.store or "", {}).get("trust", 1.0))
 
-        matched_rule = _match_rule(offer.model_key, product.perf, self.rules, offer.store)
+        matched_rule = match_rule(offer.model_key, product.perf, self.rules, offer.store)
         if matched_rule is None:
             return PipelineResult(status="parsed", raw_id=raw_id, offer_id=offer_id)
 
+        scoring = self.settings.scoring
         scored = score_offer(
             offer,
             product=product,
@@ -190,7 +200,9 @@ class Pipeline:
             rule=matched_rule,
             now=now_naive,
             store_trust=store_trust,
-            min_samples=self.settings.scoring.min_samples,
+            min_samples=scoring.min_samples,
+            window_days=scoring.window_days,
+            half_life_days=scoring.half_life_days,
         )
 
         if scored.level == Level.IGNORE:
@@ -205,51 +217,6 @@ class Pipeline:
         return PipelineResult(
             status=status, raw_id=raw_id, offer_id=offer_id, scored=scored
         )
-
-
-def _to_watch_rule(cfg: WatchRuleConfig, index: ModelIndex) -> WatchRule:
-    model_keys: frozenset[str] | None = None
-    if cfg.models:
-        resolved: set[str] = set()
-        for name in cfg.models:
-            hit = index.resolve(name)
-            if hit:
-                resolved.add(hit.model_key)
-            else:
-                # allow raw keys
-                resolved.add(name.lower().replace(" ", "_"))
-        model_keys = frozenset(resolved)
-
-    min_perf: float | None = None
-    if cfg.perf_tier:
-        m = _PERF_TIER.search(cfg.perf_tier)
-        if m:
-            min_perf = float(m.group(1))
-
-    return WatchRule(
-        name=cfg.name or "default",
-        max_price=cfg.max_price,
-        models=model_keys,
-        min_perf=min_perf,
-        max_price_per_perf=cfg.max_price_per_perf,
-    )
-
-
-def _match_rule(
-    model_key: str,
-    perf: float,
-    rules: list[WatchRule],
-    store: str | None,
-) -> WatchRule | None:
-    _ = store  # stores_exclude wired when alert dispatcher lands
-    for rule in rules:
-        if rule.models is not None:
-            if model_key not in rule.models:
-                continue
-        elif rule.min_perf is not None and perf < rule.min_perf:
-            continue
-        return rule
-    return None
 
 
 def process_texts(

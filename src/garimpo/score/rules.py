@@ -24,6 +24,25 @@ class WatchRule:
     critical_percentile: float = 0.03
     normal_percentile: float = 0.15
     min_store_trust_critical: float = 0.9
+    stores_exclude: frozenset[str] = frozenset()
+
+
+def match_rule(
+    model_key: str,
+    perf: float,
+    rules: list[WatchRule],
+    store: str | None = None,
+) -> WatchRule | None:
+    """First rule whose model/perf/store filters all accept the offer."""
+    for rule in rules:
+        if rule.models is not None and model_key not in rule.models:
+            continue
+        if rule.min_perf is not None and perf < rule.min_perf:
+            continue
+        if store and store in rule.stores_exclude:
+            continue
+        return rule
+    return None
 
 
 def weighted_percentile_rank(
@@ -60,6 +79,8 @@ def score_offer(
     now: datetime,
     store_trust: float = 1.0,
     min_samples: int = 12,
+    window_days: int = 90,
+    half_life_days: float = 21.0,
 ) -> ScoredOffer:
     ppt = price_per_perf(offer.price.amount, product)
 
@@ -72,13 +93,22 @@ def score_offer(
     if rule.models is not None and offer.model_key not in rule.models:
         return _ignore(offer, rule, "model not in rule", ppt, n=len(history))
 
+    if offer.store and offer.store in rule.stores_exclude:
+        return _ignore(offer, rule, "store excluded by rule", ppt, n=len(history))
+
     if rule.min_perf is not None and product.perf < rule.min_perf:
         return _ignore(offer, rule, "below perf_tier", ppt, n=len(history))
 
     if rule.max_price_per_perf is not None and ppt is not None and ppt > rule.max_price_per_perf:
         return _ignore(offer, rule, "above max_price_per_perf", ppt, n=len(history))
 
-    baseline = compute_baseline(history, now, min_samples=min_samples)
+    baseline = compute_baseline(
+        history,
+        now,
+        window_days=window_days,
+        half_life_days=half_life_days,
+        min_samples=min_samples,
+    )
 
     if baseline.kind == "insufficient":
         level = Level.NORMAL if float(offer.price.amount) <= rule.max_price else Level.IGNORE
@@ -95,8 +125,15 @@ def score_offer(
             rule_name=rule.name,
         )
 
-    pct = weighted_percentile_rank(history, float(offer.price.amount), now)
-    assert baseline.median is not None
+    pct = weighted_percentile_rank(
+        history,
+        float(offer.price.amount),
+        now,
+        window_days=window_days,
+        half_life_days=half_life_days,
+    )
+    if baseline.median is None:  # pragma: no cover - compute_baseline invariant
+        raise RuntimeError("baseline ok sem mediana")
 
     if pct <= rule.critical_percentile and store_trust >= rule.min_store_trust_critical:
         level = Level.CRITICAL
@@ -109,6 +146,7 @@ def score_offer(
         price=float(offer.price.amount),
         percentile=pct,
         baseline=baseline,
+        window_days=window_days,
     )
     return ScoredOffer(
         offer=offer,

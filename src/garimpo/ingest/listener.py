@@ -27,6 +27,7 @@ async def run_once(
             resolved.append(await client.resolve_source(src))
         for src in resolved:
             total += await recover_source(client, pipeline, src, alert=True)
+        pipeline.purge_expired()
     finally:
         await client.stop()
     return total
@@ -59,6 +60,7 @@ async def run_daemon(
     stop = stop_event or asyncio.Event()
     tasks: list[asyncio.Task[None]] = [
         asyncio.create_task(_quiet_flush_loop(pipeline, stop)),
+        asyncio.create_task(_retention_loop(pipeline, stop)),
     ]
 
     if pipeline.settings.llm.enabled:
@@ -102,6 +104,21 @@ async def _quiet_flush_loop(pipeline: Pipeline, stop: asyncio.Event) -> None:
         was_quiet = quiet_now
         try:
             await asyncio.wait_for(stop.wait(), timeout=60)
+        except TimeoutError:
+            continue
+
+
+async def _retention_loop(
+    pipeline: Pipeline,
+    stop: asyncio.Event,
+    *,
+    interval_hours: float = 6.0,
+) -> None:
+    """Keep raw_messages bounded — a 24/7 daemon otherwise grows forever."""
+    while not stop.is_set():
+        pipeline.purge_expired()
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=interval_hours * 3600)
         except TimeoutError:
             continue
 

@@ -5,7 +5,13 @@ from __future__ import annotations
 from garimpo.score.baseline import Baseline
 
 
-def explain(*, price: float, percentile: float, baseline: Baseline) -> str:
+def explain(
+    *,
+    price: float,
+    percentile: float,
+    baseline: Baseline,
+    window_days: int = 90,
+) -> str:
     if baseline.kind != "ok" or baseline.median is None or baseline.min_90d is None:
         return f"histórico insuficiente (n={baseline.n})"
 
@@ -14,6 +20,6 @@ def explain(*, price: float, percentile: float, baseline: Baseline) -> str:
     approx_rank = max(1, int(round(percentile * baseline.n)) + 1)
     discount = (baseline.median - price) / baseline.median * 100.0
     return (
-        f"{approx_rank}º menor em 90 dias (mín: R$ {baseline.min_90d:,.0f}) "
+        f"{approx_rank}º menor em {window_days} dias (mín: R$ {baseline.min_90d:,.0f}) "
         f"· mediana R$ {baseline.median:,.0f} → {discount:+.1f}%".replace(",", ".")
     )
