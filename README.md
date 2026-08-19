@@ -7,8 +7,8 @@ statistically exceptional.
 *Garimpo* is Portuguese for prospecting: sifting through tons of gravel
 to find the nugget.
 
-**Status:** Sprint 0 concluída; Sprint 1 (núcleo determinístico) em andamento —
-parse, catálogo GPU e scoring testáveis sem rede. Ver [docs/SPRINTS.md](docs/SPRINTS.md).
+**Status:** Sprints 0–2. Pipeline offline (SQLite, doctor, `--dry-run`) pronto;
+Telegram/listener na Sprint 3. Ver [docs/SPRINTS.md](docs/SPRINTS.md).
 
 ## Aviso (leia antes)
 
@@ -24,6 +24,10 @@ git clone https://github.com/LeoFabri1/garimpo.git
 cd garimpo
 uv sync
 uv run garimpo --help
+uv run garimpo doctor -c config/quickstart.yaml
+uv run garimpo run --dry-run -c config/quickstart.yaml \
+  -m 'RTX 5070 Ti ASUS — R$ 5.799 no PIX Kabum'
+uv run garimpo stats -c config/quickstart.yaml
 ```
 
 Com backend Telegram (a partir da Sprint 3):
