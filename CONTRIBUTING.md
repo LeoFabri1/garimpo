@@ -37,7 +37,7 @@ See DESIGN §24.4 and the backlog in `docs/SPRINTS.md`:
 ### Fixture rules
 
 - Strip `@username`, affiliate links, phone numbers, and real names before commit.
-- CI will reject fixtures that look like affiliate URLs (when that check lands).
+- Run `garimpo fixtures-check` (also enforced in CI).
 
 ## Pull requests
 

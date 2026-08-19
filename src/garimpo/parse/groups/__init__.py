@@ -6,12 +6,10 @@ from garimpo.catalog.index import ModelIndex
 from garimpo.models.offer import Offer
 from garimpo.models.raw import RawMessage
 from garimpo.parse.generic import GenericParser
-from garimpo.parse.groups.named import (
-    GatryParser,
-    HardmobParser,
-    PelandoParser,
-    PromobitParser,
-)
+from garimpo.parse.groups.gatry import GatryParser
+from garimpo.parse.groups.hardmob import HardmobParser
+from garimpo.parse.groups.pelando import PelandoParser
+from garimpo.parse.groups.promobit import PromobitParser
 
 
 class ParserRegistry:

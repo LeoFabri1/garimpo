@@ -285,3 +285,16 @@ def catalog_check_cmd() -> None:
             typer.echo(f"✗ {err}", err=True)
         raise typer.Exit(code=1)
     typer.echo("✓ catalogs ok")
+
+
+@app.command("fixtures-check")
+def fixtures_check_cmd() -> None:
+    """Reject affiliate links / PII patterns in parser fixtures."""
+    from garimpo.tools.fixture_check import check_fixtures
+
+    errors = check_fixtures()
+    if errors:
+        for err in errors:
+            typer.echo(f"✗ {err}", err=True)
+        raise typer.Exit(code=1)
+    typer.echo("✓ fixtures ok")
