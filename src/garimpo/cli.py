@@ -39,7 +39,7 @@ def doctor_cmd(
         None, "--config", "-c", help="Path to config YAML."
     ),
 ) -> None:
-    """Diagnose configuration (local checks; network in Sprint 3)."""
+    """Diagnose configuration and (optionally) Telegram session."""
     from garimpo.tools.doctor import exit_code, format_results, run_doctor
 
     results = run_doctor(config=config, quick=quick)
@@ -47,12 +47,52 @@ def doctor_cmd(
     raise typer.Exit(code=exit_code(results))
 
 
+@app.command("login")
+def login_cmd(
+    qr: bool = typer.Option(True, "--qr/--code", help="QR login (default) or phone code."),
+    export_string: bool = typer.Option(
+        False, "--export-string", help="Print StringSession once (for ephemeral hosts)."
+    ),
+    password: str | None = typer.Option(
+        None, "--password", help="2FA password if required."
+    ),
+    phone: str | None = typer.Option(None, "--phone", help="Phone for --code login."),
+    config: Path | None = typer.Option(
+        None, "--config", "-c", help="Path to config YAML."
+    ),
+) -> None:
+    """Authenticate Telegram session (use a secondary number)."""
+    import asyncio
+
+    from garimpo.auth.errors import LoginAborted, LoginConfigError
+    from garimpo.auth.login import load_dotenv_if_present, run_login
+    from garimpo.settings import load_settings
+
+    load_dotenv_if_present()
+    settings = load_settings(config)
+    try:
+        asyncio.run(
+            run_login(
+                settings,
+                use_qr=qr,
+                export_string=export_string,
+                phone=phone,
+                password=password,
+            )
+        )
+    except (LoginConfigError, LoginAborted) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+
 @app.command("run")
 def run_cmd(
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Process fixture/demo without Telegram."
     ),
-    once: bool = typer.Option(False, "--once", help="Single pass then exit (Sprint 3)."),
+    once: bool = typer.Option(
+        False, "--once", help="Single gap-recovery pass then exit."
+    ),
     config: Path | None = typer.Option(
         None, "--config", "-c", help="Path to config YAML."
     ),
@@ -60,38 +100,60 @@ def run_cmd(
         None,
         "--message",
         "-m",
-        help="Message text to process (repeatable). Implies offline pipeline.",
+        help="Message text to process (repeatable). Offline pipeline.",
     ),
 ) -> None:
-    """Run the listener daemon, or offline pipeline with --dry-run / --message."""
+    """Run daemon, --once pass, or offline --dry-run / -m pipeline."""
+    from garimpo.auth.login import load_dotenv_if_present
     from garimpo.logging import configure_logging
-    from garimpo.pipeline import process_texts
     from garimpo.settings import load_settings
 
-    if not dry_run and not message:
-        typer.echo(
-            "garimpo run (daemon): Telegram listener arrives in Sprint 3.\n"
-            "Use: garimpo run --dry-run -m 'RTX 5070 Ti R$ 5.799 no PIX Kabum'"
-        )
-        raise typer.Exit(code=1)
-
+    load_dotenv_if_present()
     settings = load_settings(config)
     configure_logging(level=settings.logging.level, fmt=settings.logging.format)
 
-    texts = list(message or [])
-    if not texts:
-        texts = [
-            "🚨 RTX 5070 Ti ASUS Dual — R$ 5.799 no PIX na Kabum",
-        ]
-        typer.echo("(sem -m: usando mensagem demo)\n")
+    if dry_run or message:
+        from garimpo.pipeline import process_texts
 
-    results = process_texts(settings, texts, dry_run=True)
-    for r in results:
-        level = r.scored.level.value if r.scored else "-"
-        typer.echo(
-            f"→ status={r.status} raw_id={r.raw_id} offer_id={r.offer_id} level={level}"
-        )
-    _ = once
+        texts = list(message or [])
+        if not texts:
+            texts = ["🚨 RTX 5070 Ti ASUS Dual — R$ 5.799 no PIX na Kabum"]
+            typer.echo("(sem -m: usando mensagem demo)\n")
+        results = process_texts(settings, texts, dry_run=True)
+        for r in results:
+            level = r.scored.level.value if r.scored else "-"
+            typer.echo(
+                f"→ status={r.status} raw_id={r.raw_id} offer_id={r.offer_id} level={level}"
+            )
+        return
+
+    # Live Telegram
+    import asyncio
+
+    from garimpo.ingest.factory import build_client
+    from garimpo.ingest.listener import run_daemon, run_once
+    from garimpo.ingest.sources import sources_from_settings
+    from garimpo.pipeline import Pipeline
+
+    sources = sources_from_settings(settings)
+    if not sources:
+        typer.echo("Nenhuma source em config. Adicione sources: no YAML.", err=True)
+        raise typer.Exit(code=1)
+
+    pipeline = Pipeline(settings, dry_run=False)
+    client = build_client(settings)
+    try:
+        if once:
+            n = asyncio.run(run_once(client, pipeline, sources))
+            typer.echo(f"processed {n} message(s) (--once)")
+        else:
+            typer.echo("garimpo run: listening (Ctrl+C to stop)…")
+            try:
+                asyncio.run(run_daemon(client, pipeline, sources))
+            except KeyboardInterrupt:
+                typer.echo("\nstopped")
+    finally:
+        pipeline.close()
 
 
 @app.command("stats")

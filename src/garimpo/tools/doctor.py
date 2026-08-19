@@ -20,7 +20,9 @@ class CheckResult:
 
 
 def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[CheckResult]:
-    _ = quick  # network checks arrive in Sprint 3
+    from garimpo.auth.login import load_dotenv_if_present
+
+    load_dotenv_if_present()
     results: list[CheckResult] = []
 
     config_path = find_config_path(config)
@@ -113,6 +115,8 @@ def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[Check
     session = Path(settings.telegram.session)
     if session.is_file():
         results.append(CheckResult(True, "arquivo de sessão", str(session)))
+        if not quick:
+            results.extend(_check_session_auth(settings))
     else:
         results.append(
             CheckResult(
@@ -124,6 +128,47 @@ def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[Check
         )
 
     return results
+
+
+def _check_session_auth(settings: object) -> list[CheckResult]:
+    import asyncio
+
+    try:
+        from garimpo.ingest.factory import build_client
+
+        client = build_client(settings)  # type: ignore[arg-type]
+
+        async def _probe() -> bool:
+            try:
+                ok = await client.is_authorized()
+                await client.stop()
+                return bool(ok)
+            except Exception:
+                try:
+                    await client.stop()
+                except Exception:  # noqa: BLE001
+                    pass
+                raise
+
+        authorized = asyncio.run(_probe())
+        if authorized:
+            return [CheckResult(True, "sessão autenticada", "ok")]
+        return [
+            CheckResult(
+                False,
+                "sessão autenticada",
+                "arquivo existe mas não autoriza — rode: garimpo login --qr",
+            )
+        ]
+    except Exception as exc:  # noqa: BLE001
+        return [
+            CheckResult(
+                True,
+                "sessão autenticada",
+                f"não verificado ({exc})",
+                warn=True,
+            )
+        ]
 
 
 def format_results(results: list[CheckResult]) -> str:
