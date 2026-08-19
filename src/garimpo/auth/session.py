@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 def session_path(configured: str) -> Path:
-    """Fixed session path from config — never random (DESIGN §20.2)."""
+    """Fixed session path from config — never random."""
     path = Path(configured)
     path.parent.mkdir(parents=True, exist_ok=True)
     return path

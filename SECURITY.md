@@ -34,7 +34,7 @@ the session as the account itself.
 - Never commit `.env`, `data/`, or `*.session`.
 - Prefer env var *names* in YAML (`api_key_env: GROQ_API_KEY`), never values.
 - Use a **secondary phone number** for the userbot — never your primary account
-  (DESIGN §22.1). Risk of ban is real under Telegram ToS grey area.
+  Risk of ban is real under Telegram ToS grey area.
 
 ## Revoking access quickly
 

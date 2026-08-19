@@ -1,4 +1,4 @@
--- Migration 001: initial schema (DESIGN §6.2)
+-- Migration 001: initial schema
 -- Applied via PRAGMA user_version
 
 PRAGMA foreign_keys = ON;

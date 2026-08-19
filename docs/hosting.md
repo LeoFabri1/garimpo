@@ -1,4 +1,4 @@
-# Deploy templates — honest about cost (DESIGN §21)
+# Deploy templates — honest about cost
 
 Garimpo needs a **24/7 host** with persistent disk for `data/` (DB + session).
 

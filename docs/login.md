@@ -63,4 +63,4 @@ A string é acesso total à conta. Revogue em Dispositivos se vazar.
 ## Segurança
 
 - `data/*.session` está no `.gitignore`
-- Detalhes: [SECURITY.md](../SECURITY.md) · DESIGN §20 / §22
+- Detalhes: [SECURITY.md](../SECURITY.md)

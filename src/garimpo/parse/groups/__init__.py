@@ -1,4 +1,4 @@
-"""Parser registry: source.parser → implementation (DESIGN §9.6)."""
+"""Parser registry: source.parser → implementation."""
 
 from __future__ import annotations
 

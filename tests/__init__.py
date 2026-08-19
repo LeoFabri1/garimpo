@@ -1,1 +1,1 @@
-"""Test package marker. Real suites land in Sprint 1+."""
+"""Test package marker."""

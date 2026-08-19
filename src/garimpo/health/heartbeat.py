@@ -1,4 +1,4 @@
-"""Optional heartbeat ping (DESIGN §17.3)."""
+"""Optional heartbeat ping, so a dead daemon does not go unnoticed."""
 
 from __future__ import annotations
 

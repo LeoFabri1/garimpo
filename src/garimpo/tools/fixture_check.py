@@ -1,4 +1,4 @@
-"""Reject anonymization failures in fixture messages (DESIGN §18.1 / §22.4)."""
+"""Reject anonymization failures in fixture messages."""
 
 from __future__ import annotations
 

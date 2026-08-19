@@ -1,4 +1,4 @@
-"""Cooldownoldown and rate-limit decisions (DESIGN §10.3 / §12)."""
+"""Cooldown and rate-limit decisions."""
 
 from __future__ import annotations
 

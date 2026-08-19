@@ -1,4 +1,4 @@
-"""Gap recovery after reconnect / --once mode (DESIGN §8.3)."""
+"""Gap recovery after reconnect / --once mode."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ async def recover_source(
     """Fetch messages since last_msg_id and process them.
 
     Offers older than 15 minutes are stored but do not generate alerts
-    when ``alert`` is True (DESIGN §8.3).
+    when ``alert`` is True.
     """
     now = now or datetime.now(UTC)
     resolved = await client.resolve_source(source)

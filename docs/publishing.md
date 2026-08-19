@@ -18,8 +18,8 @@ Fonte de configuração: [`pyproject.toml`](../pyproject.toml) (PEP 621 + Hatchl
 | Entrypoint | `garimpo = "garimpo.cli:app"` |
 | Licença | MIT |
 
-O **core** no PyPI **não** puxa Telethon. Backends MTProto e MCP são extras,
-como no DESIGN §3.4 — instalação tipica de quem vai rodar o daemon:
+O **core** no PyPI **não** puxa Telethon. Backends MTProto e MCP são extras —
+instalação típica de quem vai rodar o daemon:
 
 ```bash
 pip install "garimpo[telethon]"
@@ -38,8 +38,8 @@ uv pip install "garimpo[telethon]"
 - `dependencies` — runtime mínimo (Pydantic, Typer, httpx, …)
 - `optional-dependencies`:
   - `telethon` → `telethon==1.44.0` (**pin exato**)
-  - `pyro` → `pyrotgfork>=2.2` (porta de saída; Sprint 8)
-  - `mcp` → `mcp>=1.0` (Sprint 7)
+  - `pyro` → `pyrotgfork>=2.2` (backend alternativo)
+  - `mcp` → `mcp>=1.0`
   - `dev` → pytest, ruff, mypy, …
 - `urls` — Homepage / Repository / Issues / Documentation
 - `scripts.garimpo` — console script instalado no PATH
@@ -172,7 +172,7 @@ só use token se souber o que está fazendo.
 
 ## Workflow GitHub sugerido (esboço)
 
-Não é obrigatório na Sprint 0; quando houver CI de release:
+Ainda não configurado; quando houver CI de release:
 
 ```yaml
 # .github/workflows/publish.yml
@@ -212,7 +212,7 @@ Disparo típico: criar GitHub Release a partir da tag `vX.Y.Z`.
 - Catálogos pessoais do usuário (`extra_paths`)
 - Pins frouxos de Telethon (`>=`) — manter `==1.44.0` no extra
 
-Affiliate rewriting, se existir no futuro, permanece **default off** (DESIGN §22.4)
+Affiliate rewriting, se existir no futuro, permanece **default off**
 também no pacote publicado.
 
 ---

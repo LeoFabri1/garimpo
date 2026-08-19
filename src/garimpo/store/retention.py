@@ -1,4 +1,4 @@
-"""Retention purge for noisy raw_messages (DESIGN §6.3)."""
+"""Retention purge for noisy raw_messages."""
 
 from __future__ import annotations
 

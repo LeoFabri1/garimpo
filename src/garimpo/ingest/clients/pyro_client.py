@@ -14,7 +14,7 @@ class PyroUnavailableError(RuntimeError):
     def __init__(self) -> None:
         super().__init__(
             "pyrotgfork não instalado. Rode: uv sync --extra pyro\n"
-            "(DESIGN §3.3 — porta de saída do Telethon)"
+            "(backend alternativo ao Telethon)"
         )
 
 

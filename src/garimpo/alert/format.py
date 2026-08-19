@@ -1,4 +1,4 @@
-"""Format alert text for lockscreen-friendly push (DESIGN §12.4)."""
+"""Format alert text for lockscreen-friendly push."""
 
 from __future__ import annotations
 

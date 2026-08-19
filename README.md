@@ -7,8 +7,9 @@ statistically exceptional.
 *Garimpo* is Portuguese for prospecting: sifting through tons of gravel
 to find the nugget.
 
-**Status:** Sprints 0–9 scaffolded. MCP queries, webhook, export, panel localhost,
-category placeholders, telemetry opt-in (off). Ver [docs/SPRINTS.md](docs/SPRINTS.md).
+**Status:** pre-alpha. The offline pipeline (parse → score → alert), Telegram
+ingest, MCP queries, webhook, CSV export and the local panel are in place;
+telemetry is opt-in and off by default.
 
 ## Aviso — leia antes de fazer login
 
@@ -69,13 +70,10 @@ e publish para maintainers: **[docs/publishing.md](docs/publishing.md)**.
 
 | Documento | Conteúdo |
 |-----------|----------|
-| [DESIGN-2.md](DESIGN-2.md) | Design técnico completo (fonte canônica) |
-| [docs/DESIGN.md](docs/DESIGN.md) | Ponte estável em `docs/` → design canônico |
-| [docs/SPRINTS.md](docs/SPRINTS.md) | Sprints 0–9, PRs diários, critérios de pronto |
-| [docs/publishing.md](docs/publishing.md) | PyPI: metadados, extras, build, Trusted Publishing |
-| [docs/login.md](docs/login.md) | api_id/api_hash + QR login + risco de ban |
 | [docs/quickstart.md](docs/quickstart.md) | Do clone ao primeiro alerta |
+| [docs/login.md](docs/login.md) | api_id/api_hash + QR login + risco de ban |
 | [docs/hosting.md](docs/hosting.md) | VPS, Docker, heartbeat, custo |
+| [docs/publishing.md](docs/publishing.md) | PyPI: metadados, extras, build, Trusted Publishing |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup e good first issues |
 | [SECURITY.md](SECURITY.md) | Sessão, tokens, revogação |
 
@@ -83,7 +81,7 @@ e publish para maintainers: **[docs/publishing.md](docs/publishing.md)**.
 
 | Versão | Critério de conclusão |
 |--------|------------------------|
-| **v0.1** | Alerta útil sem nenhuma API key (Sprints 0–4) |
+| **v0.1** | Alerta útil sem nenhuma API key |
 | **v0.1.1** | Critical acorda, normal não; Docker + heartbeat |
 | **v0.2** | LLM só como fallback de parse; `simulate` |
 | **v0.3** | Servidor MCP + webhooks + export |

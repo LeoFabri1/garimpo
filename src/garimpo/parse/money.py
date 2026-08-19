@@ -111,7 +111,8 @@ def select_price(
     """Pick cash/PIX price from message text.
 
     Returns `(price, price_listed)`.
-    Heuristics follow DESIGN §9.3.
+    Prefers PIX/à-vista over installment totals, and rejects values outside
+    the product's plausible range.
     """
     de_por = _DE_POR.search(text)
     if de_por:

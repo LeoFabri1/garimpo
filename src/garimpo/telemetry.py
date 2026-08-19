@@ -1,4 +1,4 @@
-"""Community telemetry — opt-in, default OFF (DESIGN §22.5)."""
+"""Community telemetry — opt-in, default OFF."""
 
 from __future__ import annotations
 

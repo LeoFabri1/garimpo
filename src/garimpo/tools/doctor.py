@@ -1,4 +1,4 @@
-"""garimpo doctor — local configuration diagnostics (Sprint 2: no network)."""
+"""garimpo doctor — local configuration diagnostics, no network."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[Check
                 CheckResult(
                     True,
                     f"{label} presente",
-                    f"ausente ({env_name}) — necessário a partir do login (Sprint 3)",
+                    f"ausente ({env_name}) — necessário para `garimpo login`",
                     warn=True,
                 )
             )
@@ -111,7 +111,7 @@ def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[Check
     else:
         results.append(CheckResult(True, "watch rules", f"{len(settings.watch)} regra(s)"))
 
-    # Session file (informational until Sprint 3)
+    # Session file (informational until `garimpo login` runs)
     session = Path(settings.telegram.session)
     if session.is_file():
         results.append(CheckResult(True, "arquivo de sessão", str(session)))

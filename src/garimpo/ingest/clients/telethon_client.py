@@ -13,7 +13,7 @@ class TelethonUnavailableError(RuntimeError):
     def __init__(self) -> None:
         super().__init__(
             "Telethon não instalado. Rode: uv sync --extra telethon\n"
-            "(pin exato telethon==1.44.0 — DESIGN §3.3)"
+            "(pin exato telethon==1.44.0)"
         )
 
 

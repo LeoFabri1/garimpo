@@ -1,4 +1,4 @@
-"""Quiet hours: defer normal alerts; critical always passes (DESIGN §12.3)."""
+"""Quiet hours: defer normal alerts; critical always passes."""
 
 from __future__ import annotations
 

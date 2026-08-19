@@ -1,4 +1,4 @@
-"""Warnings shown before login / in docs (DESIGN §22)."""
+"""Warnings shown before login / in docs."""
 
 from __future__ import annotations
 

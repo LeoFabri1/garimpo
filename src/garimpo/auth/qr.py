@@ -1,4 +1,4 @@
-"""QR login flow (preferred path — DESIGN §20.3)."""
+"""QR login flow — the preferred path, since it avoids SMS FloodWait."""
 
 from __future__ import annotations
 

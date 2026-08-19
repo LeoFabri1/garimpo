@@ -1,4 +1,4 @@
-"""Scoring scenarios from DESIGN §18.4."""
+"""Scoring scenarios: cold start, outliers, store trust."""
 
 from __future__ import annotations
 

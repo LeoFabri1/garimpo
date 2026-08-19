@@ -1,4 +1,4 @@
-"""Interactive Telegram login with FloodWait protection (DESIGN §20)."""
+"""Interactive Telegram login with FloodWait protection."""
 
 from __future__ import annotations
 

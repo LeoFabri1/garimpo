@@ -1,4 +1,4 @@
-"""Golden parser checks across group fixtures (DESIGN §18.1)."""
+"""Golden parser checks across group fixtures."""
 
 from __future__ import annotations
 

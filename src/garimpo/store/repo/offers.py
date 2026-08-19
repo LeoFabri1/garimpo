@@ -11,7 +11,7 @@ from garimpo.models.offer import Offer
 
 
 def offer_hash(model_key: str, price: Decimal | float, store: str | None) -> str:
-    # round to nearest 10 BRL as DESIGN §10.2
+    # round to nearest 10 BRL so cent-level noise still dedupes
     rounded = int(round(float(price), -1))
     payload = f"{model_key}|{rounded}|{store or ''}"
     return hashlib.sha1(payload.encode("utf-8")).hexdigest()
