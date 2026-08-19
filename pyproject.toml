@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "garimpo"
-version = "0.0.1"
+version = "0.1.0"
 description = "Deal prospecting engine for Telegram — filters the noise, alerts only on statistically exceptional prices"
 readme = "README.md"
 license = "MIT"
@@ -36,14 +36,7 @@ dependencies = [
 telethon = ["telethon==1.44.0"]
 pyro = ["pyrotgfork>=2.2"]
 mcp = ["mcp>=1.0"]
-dev = [
-    "pytest>=8",
-    "pytest-asyncio>=0.23",
-    "syrupy>=4",
-    "hypothesis>=6",
-    "ruff>=0.6",
-    "mypy>=1.11",
-]
+# Dev tooling is a dependency-group (PEP 735), not a published extra — see below.
 
 [project.urls]
 Homepage = "https://github.com/LeoFabri1/garimpo"

@@ -40,7 +40,6 @@ uv pip install "garimpo[telethon]"
   - `telethon` → `telethon==1.44.0` (**pin exato**)
   - `pyro` → `pyrotgfork>=2.2` (backend alternativo)
   - `mcp` → `mcp>=1.0`
-  - `dev` → pytest, ruff, mypy, …
 - `urls` — Homepage / Repository / Issues / Documentation
 - `scripts.garimpo` — console script instalado no PATH
 
@@ -67,14 +66,16 @@ uv pip install "garimpo[telethon]"
 | `telethon` | daemon / login (v0.1+) | `pip install "garimpo[telethon]"` |
 | `pyro` | backend alternativo (v0.4+) | `pip install "garimpo[pyro]"` |
 | `mcp` | `garimpo mcp` (v0.3+) | `pip install "garimpo[mcp]"` |
-| `dev` | contribuir | `pip install "garimpo[dev]"` |
 | vários | — | `pip install "garimpo[telethon,mcp]"` |
+
+Ferramentas de desenvolvimento **não** são um extra publicado: vivem em
+`[dependency-groups] dev` (PEP 735) e o `uv sync` já as instala no clone.
 
 Com uv a partir do repo:
 
 ```bash
 uv sync --extra telethon
-uv sync --all-extras          # telethon + pyro + mcp + dev (opcional)
+uv sync --all-extras          # telethon + pyro + mcp (+ grupo dev)
 ```
 
 ---
@@ -99,8 +100,8 @@ Requer [uv](https://docs.astral.sh/uv/):
 uv sync
 uv build
 ls dist/
-# garimpo-0.0.1-py3-none-any.whl
-# garimpo-0.0.1.tar.gz
+# garimpo-0.1.0-py3-none-any.whl
+# garimpo-0.1.0.tar.gz
 ```
 
 Instalar o wheel localmente para validar o entrypoint:
@@ -117,7 +118,12 @@ Checklist antes de publicar:
 - [ ] `uv run ruff check src tests` verde
 - [ ] `garimpo --version` bate com `pyproject.toml`
 - [ ] README e classifiers coerentes com o estado do release
-- [ ] Nenhum segredo no sdist (`tar tzf dist/*.tar.gz | grep -E 'session|\.env'` → vazio)
+- [ ] Nenhum segredo no sdist → o comando abaixo deve sair vazio. Ancore os
+      padrões: um `grep session` solto casa com `auth/session.py` e grita lobo.
+
+```bash
+tar tzf dist/*.tar.gz | grep -E '\.session$|(^|/)\.env$|\.db$|(^|/)data/'
+```
 
 ---
 
@@ -153,7 +159,7 @@ uv publish --publish-url https://test.pypi.org/legacy/ --token "$TEST_PYPI_TOKEN
 Instalar o ensaio:
 
 ```bash
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "garimpo==0.0.1"
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "garimpo==0.1.0"
 ```
 
 (`extra-index-url` porque as deps runtime vêm do PyPI real.)
@@ -170,27 +176,26 @@ só use token se souber o que está fazendo.
 
 ---
 
-## Workflow GitHub sugerido (esboço)
+## Workflow GitHub
 
-Ainda não configurado; quando houver CI de release:
+Já configurado em [`.github/workflows/publish.yml`](../.github/workflows/publish.yml).
 
-```yaml
-# .github/workflows/publish.yml
-name: Publish to PyPI
-on:
-  release:
-    types: [published]
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - run: uv build
-      - uses: pypa/gh-action-pypi-publish@release/v1
-```
+Dois gatilhos:
+
+- **GitHub Release publicado** → build, validações, upload para PyPI
+- **`workflow_dispatch`** → escolha `testpypi` ou `pypi` manualmente (use TestPyPI
+  para o ensaio antes do primeiro release)
+
+Antes de qualquer upload o job `build` recusa a publicação se:
+
+- a tag `vX.Y.Z` não bater com `version` do `pyproject.toml` (versão errada no
+  PyPI é irreversível — não há como reenviar o mesmo número)
+- `twine check` reprovar os metadados
+- o wheel instalado num venv limpo não rodar `garimpo catalog check` fora do
+  checkout
+
+Os jobs de upload usam GitHub Environments (`pypi` e `testpypi`), então você
+pode exigir aprovação manual em Settings → Environments.
 
 Disparo típico: criar GitHub Release a partir da tag `vX.Y.Z`.
 
@@ -221,7 +226,8 @@ também no pacote publicado.
 
 1. [ ] Nome `garimpo` confirmado no PyPI
 2. [ ] Trusted Publishing ou token configurado
-3. [ ] Versão `0.1.0` (ou a acordada) em `pyproject.toml` + `__init__.py`
+3. [ ] Versão `0.1.0` (ou a acordada) em `pyproject.toml` — é a fonte única,
+   `__version__` é lido da metadata instalada
 4. [ ] README com `pip install "garimpo[telethon]"` e aviso userbot/host 24/7
 5. [ ] Upload TestPyPI → smoke install → PyPI
 6. [ ] Tag `v0.1.0` + GitHub Release

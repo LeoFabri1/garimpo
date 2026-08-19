@@ -278,7 +278,7 @@ wheels = [
 
 [[package]]
 name = "garimpo"
-version = "0.0.1"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
@@ -291,14 +291,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-dev = [
-    { name = "hypothesis" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "ruff" },
-    { name = "syrupy" },
-]
 mcp = [
     { name = "mcp" },
 ]
@@ -322,23 +314,17 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
-    { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.0" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.11" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pyrotgfork", marker = "extra == 'pyro'", specifier = ">=2.2" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
     { name = "python-dateutil", specifier = ">=2.9" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rapidfuzz", specifier = ">=3.9" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
     { name = "structlog", specifier = ">=24.1" },
-    { name = "syrupy", marker = "extra == 'dev'", specifier = ">=4" },
     { name = "telethon", marker = "extra == 'telethon'", specifier = "==1.44.0" },
     { name = "typer", specifier = ">=0.12" },
 ]
-provides-extras = ["telethon", "pyro", "mcp", "dev"]
+provides-extras = ["telethon", "pyro", "mcp"]
 
 [package.metadata.requires-dev]
 dev = [

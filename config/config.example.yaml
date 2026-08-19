@@ -10,7 +10,8 @@ telegram:
   # session_string_env: TG_SESSION
   device_model: "Desktop"
   system_version: "Linux 6.8"
-  app_version: "garimpo 0.0.1"
+  # app_version defaults to the installed package version; override only if needed.
+  # app_version: "garimpo 0.1.0"
 
 sources:
   - "@promobit_hardware"

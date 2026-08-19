@@ -9,6 +9,8 @@ from typing import Any, Literal
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from garimpo import DEFAULT_APP_VERSION
+
 
 class TelegramSettings(BaseModel):
     backend: Literal["telethon", "pyrotgfork"] = "telethon"
@@ -18,7 +20,7 @@ class TelegramSettings(BaseModel):
     session_string_env: str | None = None
     device_model: str = "Desktop"
     system_version: str = "Linux 6.8"
-    app_version: str = "garimpo 0.0.1"
+    app_version: str = DEFAULT_APP_VERSION
 
 
 class SourceRef(BaseModel):

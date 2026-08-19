@@ -63,7 +63,7 @@ pip install "garimpo[telethon]"   # quando 0.1.0+ estiver no índice
 garimpo --help
 ```
 
-Extras: `telethon`, `pyro`, `mcp`, `dev`. Configuração de build, versionamento
+Extras: `telethon`, `pyro`, `mcp`. Configuração de build, versionamento
 e publish para maintainers: **[docs/publishing.md](docs/publishing.md)**.
 
 ## Documentação

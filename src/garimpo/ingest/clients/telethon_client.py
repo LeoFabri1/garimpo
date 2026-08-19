@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
+from garimpo import DEFAULT_APP_VERSION
 from garimpo.ingest.base import Handler, SourceRef
 from garimpo.models.raw import RawMessage
 
@@ -33,7 +34,7 @@ class TelethonClient:
         api_hash: str,
         device_model: str = "Desktop",
         system_version: str = "Linux 6.8",
-        app_version: str = "garimpo 0.0.1",
+        app_version: str = DEFAULT_APP_VERSION,
         session_string: str | None = None,
     ) -> None:
         _require_telethon()
