@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: garimpo
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    # Free tier sleeps — do not use for the daemon.
+    disk:
+      name: garimpo-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: TG_API_ID
+        sync: false
+      - key: TG_API_HASH
+        sync: false
+      - key: TG_SESSION
+        sync: false

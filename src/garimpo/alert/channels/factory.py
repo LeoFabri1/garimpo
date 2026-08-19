@@ -16,6 +16,7 @@ def build_channel(
 ) -> Channel:
     if force_console or settings.alerts.channel == "console":
         return ConsoleChannel()
+
     if settings.alerts.channel == "saved_messages":
         if client is None:
             raise ValueError(
@@ -25,5 +26,19 @@ def build_channel(
         from garimpo.alert.channels.saved_messages import SavedMessagesChannel
 
         return SavedMessagesChannel(client)
-    # bot/webhook later
+
+    if settings.alerts.channel == "bot":
+        bot = settings.alerts.bot
+        if bot is None:
+            raise ValueError("alerts.bot token_env/chat_id_env obrigatórios")
+        token = settings.env(bot.token_env)
+        chat_id = settings.env(bot.chat_id_env)
+        if not token or not chat_id:
+            raise ValueError(
+                f"Defina {bot.token_env} e {bot.chat_id_env} no .env para canal bot"
+            )
+        from garimpo.alert.channels.bot import BotChannel
+
+        return BotChannel(token=token, chat_id=chat_id)
+
     return ConsoleChannel()

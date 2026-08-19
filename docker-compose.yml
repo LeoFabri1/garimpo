@@ -1,0 +1,17 @@
+services:
+  garimpo:
+    build: .
+    image: garimpo:local
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config:ro
+      - ./catalog:/app/catalog:ro
+    env_file: .env
+    # Prefer: command: ["run"]  or ["run", "--once"] for cron-like
+    command: ["run"]
+    healthcheck:
+      test: ["CMD", "garimpo", "doctor", "--quick", "-c", "/app/config/config.yaml"]
+      interval: 5m
+      timeout: 30s
+      retries: 3

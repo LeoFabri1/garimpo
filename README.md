@@ -7,8 +7,8 @@ statistically exceptional.
 *Garimpo* is Portuguese for prospecting: sifting through tons of gravel
 to find the nugget.
 
-**Status:** Sprints 0–3 (+ avisos de risco). Sprint 4 (Saved Messages) em
-andamento. Ver [docs/SPRINTS.md](docs/SPRINTS.md).
+**Status:** Sprints 0–6. v0.1/v0.1.1 + LLM enrich scaffolding, `simulate`,
+`reparse`. Ver [docs/SPRINTS.md](docs/SPRINTS.md).
 
 ## Aviso — leia antes de fazer login
 
@@ -75,6 +75,7 @@ e publish para maintainers: **[docs/publishing.md](docs/publishing.md)**.
 | [docs/publishing.md](docs/publishing.md) | PyPI: metadados, extras, build, Trusted Publishing |
 | [docs/login.md](docs/login.md) | api_id/api_hash + QR login + risco de ban |
 | [docs/quickstart.md](docs/quickstart.md) | Do clone ao primeiro alerta |
+| [docs/hosting.md](docs/hosting.md) | VPS, Docker, heartbeat, custo |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup e good first issues |
 | [SECURITY.md](SECURITY.md) | Sessão, tokens, revogação |
 

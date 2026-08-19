@@ -131,6 +131,13 @@ class Pipeline:
                 parser_used="generic",
                 fail_reason="parse_failed",
             )
+            if self.settings.llm.enabled:
+                from garimpo.enrich.queue import enqueue
+
+                enqueue(self.conn, raw_id)
+                messages_repo.update_raw_status(
+                    self.conn, raw_id, status="llm_pending", parser_used="generic"
+                )
             return PipelineResult(status="parse_failed", raw_id=raw_id)
 
         ohash = offers_repo.offer_hash(offer.model_key, offer.price.amount, offer.store)

@@ -193,3 +193,38 @@ def backfill_cmd(
     settings = load_settings(config)
     n = backfill_csv(settings.storage.path, csv_file, origin=origin)
     typer.echo(f"inserted {n} row(s) into price_history (origin={origin})")
+
+
+@app.command("simulate")
+def simulate_cmd(
+    days: int = typer.Option(90, "--days"),
+    config: Path | None = typer.Option(
+        None, "--config", "-c", help="Path to config YAML."
+    ),
+) -> None:
+    """Replay stored offers against current watch rules (calibration)."""
+    from garimpo.settings import load_settings
+    from garimpo.tools.simulate import simulate
+
+    settings = load_settings(config)
+    report = simulate(settings, days=days)
+    typer.echo(
+        f"simulate last {report.days}d — {report.offers} offers → {report.by_level}"
+    )
+
+
+@app.command("reparse")
+def reparse_cmd(
+    status: str = typer.Option("parse_failed", "--status"),
+    since: int = typer.Option(30, "--since", help="Days lookback"),
+    config: Path | None = typer.Option(
+        None, "--config", "-c", help="Path to config YAML."
+    ),
+) -> None:
+    """Re-run parsers on stored raw messages."""
+    from garimpo.settings import load_settings
+    from garimpo.tools.reparse import reparse
+
+    settings = load_settings(config)
+    n = reparse(settings, status=status, since_days=since, dry_run=True)
+    typer.echo(f"reparse: {n} message(s) newly parsed")

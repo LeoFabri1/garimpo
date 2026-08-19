@@ -13,9 +13,9 @@ from garimpo.store.repo import messages as messages_repo
 def test_migrate_sets_user_version(tmp_path: Path) -> None:
     db = tmp_path / "t.db"
     conn = connect(db)
-    assert user_version(conn) == 1
+    assert user_version(conn) == 2
     # idempotent
-    assert connect(db).execute("PRAGMA user_version").fetchone()[0] == 1
+    assert connect(db).execute("PRAGMA user_version").fetchone()[0] == 2
     conn.close()
 
 

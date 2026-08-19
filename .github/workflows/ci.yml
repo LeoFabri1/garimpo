@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Sync
+        run: uv sync --extra telethon --extra dev
+      - name: Ruff
+        run: uv run ruff check src tests
+      - name: Pytest
+        run: uv run pytest -q
+      - name: Reject session secrets
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -E '\.session$' ; then
+            echo "ERROR: .session files must not be committed"
+            exit 1
+          fi
+          # characteristic Telethon StringSession prefix often starts with digits:hex
+          if git grep -nE '1[A-Za-z0-9_-]{50,}' -- '*.md' '*.yaml' '*.yml' '*.py' '*.txt' '*.env' 2>/dev/null | grep -i session ; then
+            echo "WARN: possible session string mention — review manually"
+          fi
+          if git ls-files | grep -E '(^|/)\.env$' ; then
+            echo "ERROR: .env must not be committed"
+            exit 1
+          fi
+          echo "secret checks ok"

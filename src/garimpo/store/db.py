@@ -10,6 +10,7 @@ _MIGRATIONS_DIR = Path(__file__).resolve().parent / "migrations"
 # version -> filename (sorted by version number)
 _MIGRATION_FILES: dict[int, str] = {
     1: "001_initial.sql",
+    2: "002_enrich_queue.sql",
 }
 
 
