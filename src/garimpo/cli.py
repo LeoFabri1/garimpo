@@ -14,6 +14,9 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
+catalog_app = typer.Typer(help="Catalog tools")
+app.add_typer(catalog_app, name="catalog")
+
 
 @app.callback(invoke_without_command=True)
 def main(
@@ -269,3 +272,16 @@ def panel_cmd(
     settings = load_settings(config)
     typer.echo(f"garimpo panel → http://{host}:{port}/  (Ctrl+C to stop)")
     serve(settings.storage.path, host=host, port=port)
+
+
+@catalog_app.command("check")
+def catalog_check_cmd() -> None:
+    """Validate catalog JSON (aliases, collisions, required fields)."""
+    from garimpo.tools.catalog_check import check_catalogs
+
+    errors = check_catalogs()
+    if errors:
+        for err in errors:
+            typer.echo(f"✗ {err}", err=True)
+        raise typer.Exit(code=1)
+    typer.echo("✓ catalogs ok")

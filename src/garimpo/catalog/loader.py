@@ -29,9 +29,8 @@ def default_catalog_dir() -> Path:
     return candidates[0]
 
 
-def load_gpu_catalog(path: Path | None = None) -> Catalog:
-    catalog_path = path or (default_catalog_dir() / "gpu.json")
-    raw: dict[str, Any] = json.loads(catalog_path.read_text(encoding="utf-8"))
+def load_catalog_file(path: Path) -> Catalog:
+    raw: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     meta_raw = raw["meta"]
     meta = CatalogMeta(
         perf_basis=meta_raw["perf_basis"],
@@ -54,6 +53,45 @@ def load_gpu_catalog(path: Path | None = None) -> Catalog:
             price_range=tuple(price_range) if price_range else None,
         )
     return Catalog(meta=meta, products=products)
+
+
+def load_gpu_catalog(path: Path | None = None) -> Catalog:
+    catalog_path = path or (default_catalog_dir() / "gpu.json")
+    return load_catalog_file(catalog_path)
+
+
+def load_category_catalog(category: str) -> Catalog:
+    path = default_catalog_dir() / "categories" / f"{category}.json"
+    return load_catalog_file(path)
+
+
+def merge_catalogs(*catalogs: Catalog) -> Catalog:
+    """Merge products; first catalog wins on key collision for meta."""
+    if not catalogs:
+        raise ValueError("merge_catalogs requires at least one catalog")
+    products: dict[str, Product] = {}
+    for cat in catalogs:
+        for key, product in cat.products.items():
+            if key not in products:
+                products[key] = product
+    return Catalog(meta=catalogs[0].meta, products=products)
+
+
+def load_catalog_for_watch(categories: list[str] | None = None) -> Catalog:
+    """GPU always loaded; optional category files merged for multi-category watch."""
+    base = load_gpu_catalog()
+    if not categories:
+        return base
+    extra: list[Catalog] = []
+    for cat in categories:
+        if cat in {"gpu", ""}:
+            continue
+        path = default_catalog_dir() / "categories" / f"{cat}.json"
+        if path.is_file():
+            extra.append(load_catalog_file(path))
+    if not extra:
+        return base
+    return merge_catalogs(base, *extra)
 
 
 def load_stores(path: Path | None = None) -> dict[str, dict[str, Any]]:

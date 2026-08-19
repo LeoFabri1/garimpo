@@ -61,6 +61,11 @@ async def run_daemon(
         asyncio.create_task(_quiet_flush_loop(pipeline, stop)),
     ]
 
+    if pipeline.settings.llm.enabled:
+        from garimpo.enrich.worker import enricher_loop
+
+        tasks.append(asyncio.create_task(enricher_loop(pipeline, stop)))
+
     from garimpo.health.heartbeat import heartbeat_loop, resolve_heartbeat_url
 
     hb_url = resolve_heartbeat_url(pipeline.settings)

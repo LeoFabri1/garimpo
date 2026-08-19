@@ -1,27 +1,25 @@
 # Example full configuration. Copy to config.yaml and edit.
 # Secrets stay in environment variables — never put tokens here.
-# Schema reference: DESIGN-2.md §15 · JSON Schema comes in a later sprint.
+# Schema reference: DESIGN-2.md §15
 
 telegram:
   backend: telethon           # telethon | pyrotgfork
   api_id_env: TG_API_ID
   api_hash_env: TG_API_HASH
   session: data/session.session
-  # session_string_env: TG_SESSION   # for ephemeral hosts
+  # session_string_env: TG_SESSION
   device_model: "Desktop"
   system_version: "Linux 6.8"
   app_version: "garimpo 0.0.1"
 
 sources:
   - "@promobit_hardware"
-  # - "@pechinchou_gpu"
   # - id: -1001234567890
   #   parser: hardmob
   #   enabled: true
 
 catalog:
   extra_paths: []
-  # extra_paths: ["./meu_catalogo.json"]
 
 watch:
   - name: gpu-principal
@@ -31,23 +29,21 @@ watch:
     condition: [new]
     stores_exclude: ["marketplace_generico"]
 
-  # - name: gpu-oportunidade
-  #   category: gpu
-  #   perf_tier: ">=97"
-  #   max_price_per_perf: 60
-  #   condition: [new, refurb]
-
 scoring:
   window_days: 90
   half_life_days: 21
   min_samples: 12
   outlier_mad_threshold: 3.0
 
+# Best for instant phone push: bot (BotFather + /start + chat_id).
+# saved_messages works with zero bot setup but weaker notifications.
 alerts:
-  channel: saved_messages     # saved_messages | bot | webhook | console
-  # bot:
-  #   token_env: TG_BOT_TOKEN
-  #   chat_id_env: TG_CHAT_ID
+  channel: bot
+  bot:
+    token_env: TG_BOT_TOKEN
+    chat_id_env: TG_CHAT_ID
+  # webhook:
+  #   url_env: WEBHOOK_URL
   critical:
     percentile: 0.03
     silent: false
@@ -80,4 +76,4 @@ health:
 
 logging:
   level: INFO
-  format: console             # console | json
+  format: console

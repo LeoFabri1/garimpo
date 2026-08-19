@@ -9,10 +9,10 @@ from datetime import UTC, datetime
 from typing import Any
 
 from garimpo.alert.dispatcher import Dispatcher
-from garimpo.catalog import ModelIndex, load_gpu_catalog, load_stores
+from garimpo.catalog import ModelIndex, load_catalog_for_watch, load_stores
 from garimpo.models.alert import Level, ScoredOffer
 from garimpo.models.raw import RawMessage
-from garimpo.parse.generic import GenericParser
+from garimpo.parse.groups import ParserRegistry
 from garimpo.parse.text import normalize_for_hash
 from garimpo.parse.triage import passes_triage
 from garimpo.score import WatchRule, score_offer
@@ -56,9 +56,12 @@ class Pipeline:
                 client=client,  # type: ignore[arg-type]
                 force_console=dry_run or settings.alerts.channel == "console",
             )
-        self.catalog = load_gpu_catalog()
+        categories = sorted(
+            {r.category for r in settings.watch if getattr(r, "category", None)}
+        )
+        self.catalog = load_catalog_for_watch(categories)
         self.index = ModelIndex(self.catalog)
-        self.parser = GenericParser(self.index)
+        self.parsers = ParserRegistry(self.index)
         self.stores = load_stores()
         self.conn = connect(settings.storage.path)
         self.rules = [_to_watch_rule(r, self.index) for r in settings.watch]
@@ -122,13 +125,14 @@ class Pipeline:
             messages_repo.update_raw_status(self.conn, raw_id, status="triaged_out")
             return PipelineResult(status="triaged_out", raw_id=raw_id)
 
-        offer = self.parser.parse(msg)
+        offer = self.parsers.parse(msg)
         if offer is None:
+            parser_name = msg.parser_hint or "generic"
             messages_repo.update_raw_status(
                 self.conn,
                 raw_id,
                 status="parse_failed",
-                parser_used="generic",
+                parser_used=parser_name,
                 fail_reason="parse_failed",
             )
             if self.settings.llm.enabled:
@@ -136,7 +140,7 @@ class Pipeline:
 
                 enqueue(self.conn, raw_id)
                 messages_repo.update_raw_status(
-                    self.conn, raw_id, status="llm_pending", parser_used="generic"
+                    self.conn, raw_id, status="llm_pending", parser_used=parser_name
                 )
             return PipelineResult(status="parse_failed", raw_id=raw_id)
 
@@ -161,7 +165,10 @@ class Pipeline:
             offer_id=offer_id,
         )
         messages_repo.update_raw_status(
-            self.conn, raw_id, status="parsed", parser_used="generic"
+            self.conn,
+            raw_id,
+            status="parsed",
+            parser_used=msg.parser_hint or "generic",
         )
 
         product = self.catalog.products.get(offer.model_key)
