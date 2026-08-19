@@ -1,0 +1,13 @@
+# Minimal config — copy to config.yaml and adjust.
+# Full schema: config/config.example.yaml · design: DESIGN-2.md §15
+
+sources:
+  - "@promobit_hardware"
+
+watch:
+  - category: gpu
+    models: ["RTX 5070 Ti", "RX 9070 XT"]
+    max_price: 6000
+
+alerts:
+  channel: saved_messages

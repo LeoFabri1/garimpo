@@ -1,0 +1,83 @@
+# Example full configuration. Copy to config.yaml and edit.
+# Secrets stay in environment variables — never put tokens here.
+# Schema reference: DESIGN-2.md §15 · JSON Schema comes in a later sprint.
+
+telegram:
+  backend: telethon           # telethon | pyrotgfork
+  api_id_env: TG_API_ID
+  api_hash_env: TG_API_HASH
+  session: data/session.session
+  # session_string_env: TG_SESSION   # for ephemeral hosts
+  device_model: "Desktop"
+  system_version: "Linux 6.8"
+  app_version: "garimpo 0.0.1"
+
+sources:
+  - "@promobit_hardware"
+  # - "@pechinchou_gpu"
+  # - id: -1001234567890
+  #   parser: hardmob
+  #   enabled: true
+
+catalog:
+  extra_paths: []
+  # extra_paths: ["./meu_catalogo.json"]
+
+watch:
+  - name: gpu-principal
+    category: gpu
+    models: ["RTX 5070 Ti", "RTX 5080", "RX 9070 XT"]
+    max_price: 6000
+    condition: [new]
+    stores_exclude: ["marketplace_generico"]
+
+  # - name: gpu-oportunidade
+  #   category: gpu
+  #   perf_tier: ">=97"
+  #   max_price_per_perf: 60
+  #   condition: [new, refurb]
+
+scoring:
+  window_days: 90
+  half_life_days: 21
+  min_samples: 12
+  outlier_mad_threshold: 3.0
+
+alerts:
+  channel: saved_messages     # saved_messages | bot | webhook | console
+  # bot:
+  #   token_env: TG_BOT_TOKEN
+  #   chat_id_env: TG_CHAT_ID
+  critical:
+    percentile: 0.03
+    silent: false
+    min_store_trust: 0.9
+  normal:
+    percentile: 0.15
+    silent: true
+    quiet_hours: [23, 8]
+  cooldown_hours: 6
+  cooldown_override_drop: 0.03
+  max_per_hour: 8
+
+llm:
+  enabled: false
+  provider: openai_compatible
+  base_url: https://api.groq.com/openai/v1
+  model: llama-3.3-70b-versatile
+  api_key_env: GROQ_API_KEY
+  only_on_parse_failure: true
+  max_attempts: 3
+  timeout_s: 20
+
+storage:
+  path: data/garimpo.db
+  retention_raw_days: 30
+
+health:
+  # heartbeat_url_env: HEARTBEAT_URL
+  interval_minutes: 5
+
+logging:
+  level: INFO
+  format: console             # console | json

@@ -1,0 +1,105 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "garimpo"
+version = "0.0.1"
+description = "Deal prospecting engine for Telegram — filters the noise, alerts only on statistically exceptional prices"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+authors = [{ name = "Leo Fabri" }]
+keywords = ["telegram", "price-tracking", "deals", "telethon", "gpu"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Internet",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+    "typer>=0.12",
+    "structlog>=24.1",
+    "httpx>=0.27",
+    "rapidfuzz>=3.9",
+    "python-dateutil>=2.9",
+]
+
+[project.optional-dependencies]
+telethon = ["telethon==1.44.0"]
+pyro = ["pyrotgfork>=2.2"]
+mcp = ["mcp>=1.0"]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "syrupy>=4",
+    "hypothesis>=6",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[project.urls]
+Homepage = "https://github.com/LeoFabri1/garimpo"
+Repository = "https://github.com/LeoFabri1/garimpo"
+Issues = "https://github.com/LeoFabri1/garimpo/issues"
+Documentation = "https://github.com/LeoFabri1/garimpo/tree/main/docs"
+
+[project.scripts]
+garimpo = "garimpo.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/garimpo"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"catalog" = "garimpo/data/catalog"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src/garimpo",
+    "/catalog",
+    "/config",
+    "/docs",
+    "/tests",
+    "/LICENSE",
+    "/README.md",
+    "/pyproject.toml",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "syrupy>=4",
+    "hypothesis>=6",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["garimpo"]
+mypy_path = "src"

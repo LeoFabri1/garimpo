@@ -1,0 +1,43 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Virtualenvs / uv
+.venv/
+venv/
+ENV/
+
+# Packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Secrets and runtime data — NEVER commit
+.env
+.env.*
+!.env.example
+data/
+*.session
+*.session-journal
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local overrides
+config/config.yaml
+catalog/meu_*.json

@@ -1,0 +1,23 @@
+{
+  "kabum": {
+    "display": "Kabum",
+    "domains": ["kabum.com.br", "link.kabum.com.br"],
+    "trust": 1.0
+  },
+  "terabyte": {
+    "display": "Terabyte",
+    "domains": ["terabyteshop.com.br"],
+    "trust": 1.0
+  },
+  "pichau": {
+    "display": "Pichau",
+    "domains": ["pichau.com.br"],
+    "trust": 1.0
+  },
+  "marketplace_generico": {
+    "display": "Marketplace",
+    "domains": ["mercadolivre.com.br", "shopee.com.br"],
+    "trust": 0.6,
+    "note": "vendedor terceiro — risco de anúncio falso"
+  }
+}

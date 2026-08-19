@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/LeoFabri1/garimpo/catalog/gpu.schema.json",
+  "title": "Garimpo GPU catalog",
+  "type": "object",
+  "required": ["meta", "products"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["perf_basis", "perf_reference", "updated_at"],
+      "properties": {
+        "perf_basis": { "type": "string" },
+        "perf_reference": { "type": "string" },
+        "updated_at": { "type": "string" }
+      }
+    },
+    "products": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["display", "vendor", "perf", "aliases"],
+        "properties": {
+          "display": { "type": "string" },
+          "vendor": { "type": "string" },
+          "generation": { "type": "string" },
+          "vram_gb": { "type": "number" },
+          "perf": { "type": "number" },
+          "msrp_brl": { "type": "number" },
+          "price_range": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "aliases": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "negative_aliases": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "./gpu.schema.json",
+  "meta": {
+    "perf_basis": "aproximação monotônica declarada — não copiar tabelas proprietárias",
+    "perf_reference": "rtx_5070_ti = 100",
+    "updated_at": "2026-08-01"
+  },
+  "products": {
+    "rtx_5070_ti": {
+      "display": "RTX 5070 Ti",
+      "vendor": "nvidia",
+      "generation": "blackwell",
+      "vram_gb": 16,
+      "perf": 100,
+      "msrp_brl": 7499,
+      "price_range": [3000, 12000],
+      "aliases": [
+        "rtx 5070 ti",
+        "rtx5070ti",
+        "5070ti",
+        "5070 ti",
+        "geforce rtx 5070 ti",
+        "rtx 5070ti"
+      ],
+      "negative_aliases": ["5070"]
+    },
+    "rtx_5080": {
+      "display": "RTX 5080",
+      "vendor": "nvidia",
+      "generation": "blackwell",
+      "vram_gb": 16,
+      "perf": 133,
+      "msrp_brl": 9999,
+      "price_range": [5000, 16000],
+      "aliases": ["rtx 5080", "rtx5080", "5080", "geforce rtx 5080"],
+      "negative_aliases": []
+    },
+    "rtx_5070": {
+      "display": "RTX 5070",
+      "vendor": "nvidia",
+      "generation": "blackwell",
+      "vram_gb": 12,
+      "perf": 85,
+      "msrp_brl": 5999,
+      "price_range": [2500, 10000],
+      "aliases": ["rtx 5070", "rtx5070", "geforce rtx 5070"],
+      "negative_aliases": ["5070 ti", "5070ti"]
+    },
+    "rx_9070_xt": {
+      "display": "RX 9070 XT",
+      "vendor": "amd",
+      "vram_gb": 16,
+      "perf": 97,
+      "price_range": [2800, 11000],
+      "aliases": ["rx 9070 xt", "9070xt", "9070 xt", "radeon rx 9070 xt"],
+      "negative_aliases": ["9070"]
+    },
+    "rx_9070": {
+      "display": "RX 9070",
+      "vendor": "amd",
+      "vram_gb": 16,
+      "perf": 88,
+      "price_range": [2500, 10000],
+      "aliases": ["rx 9070", "9070", "radeon rx 9070"],
+      "negative_aliases": ["9070 xt", "9070xt"]
+    }
+  }
+}
