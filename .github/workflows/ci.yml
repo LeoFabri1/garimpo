@@ -14,7 +14,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Sync
-        run: uv sync --extra telethon --extra pyro --extra dev
+        # The dev dependency-group is installed by default (tool.uv.default-groups)
+        run: uv sync --extra telethon --extra pyro
       - name: Ruff
         run: uv run ruff check src tests
       - name: Pytest
@@ -39,3 +40,33 @@ jobs:
             exit 1
           fi
           echo "secret checks ok"
+
+  package:
+    # Guards the pip-install path: the catalog ships as wheel data, and the
+    # loader must find it with no repo checkout and no catalog/ in the cwd.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Build sdist + wheel
+        run: uv build
+      - name: Install the wheel into a bare venv
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/pkgtest
+          /tmp/pkgtest/bin/pip install --quiet dist/*.whl
+      - name: Run outside the checkout, where no catalog/ exists
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/empty && cd /tmp/empty
+          test ! -e catalog
+          /tmp/pkgtest/bin/garimpo --help > /dev/null
+          /tmp/pkgtest/bin/garimpo catalog check
+          /tmp/pkgtest/bin/garimpo doctor -c "$GITHUB_WORKSPACE/config/quickstart.yaml"
+      - name: Metadata sanity
+        run: |
+          set -euo pipefail
+          /tmp/pkgtest/bin/pip install --quiet twine
+          /tmp/pkgtest/bin/twine check dist/*

@@ -55,8 +55,8 @@ def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[Check
             results.append(
                 CheckResult(
                     True,
-                    f"{label} presente",
-                    f"ausente ({env_name}) — necessário para `garimpo login`",
+                    f"{label} ausente",
+                    f"defina {env_name} no .env — necessário para `garimpo login`",
                     warn=True,
                 )
             )

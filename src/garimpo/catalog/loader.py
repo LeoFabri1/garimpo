@@ -10,23 +10,39 @@ from typing import Any
 from garimpo.models.catalog import Catalog, CatalogMeta, Product
 
 
-def default_catalog_dir() -> Path:
-    """Resolve catalog directory (repo checkout, cwd, or packaged wheel data)."""
-    env = os.environ.get("GARIMPO_CATALOG_DIR")
+class CatalogNotFoundError(FileNotFoundError):
+    """No catalog directory on the search path — usually a broken install."""
+
+
+def catalog_dir_candidates() -> list[Path]:
+    """Search order: explicit env, local override, repo checkout, packaged data."""
     candidates: list[Path] = []
+    env = os.environ.get("GARIMPO_CATALOG_DIR")
     if env:
         candidates.append(Path(env))
+    here = Path(__file__).resolve()
     candidates.extend(
         [
             Path.cwd() / "catalog",
-            Path(__file__).resolve().parents[3] / "catalog",  # repo root from src/
-            Path(__file__).resolve().parent / "data" / "catalog",  # wheel force-include
+            here.parents[3] / "catalog",  # repo root, from src/garimpo/catalog/
+            here.parents[1] / "data" / "catalog",  # installed wheel force-include
         ]
     )
+    return candidates
+
+
+def default_catalog_dir() -> Path:
+    """Resolve the catalog directory, or explain every path that was tried."""
+    candidates = catalog_dir_candidates()
     for path in candidates:
         if (path / "gpu.json").is_file():
             return path
-    return candidates[0]
+    tried = "\n".join(f"  • {p}" for p in candidates)
+    raise CatalogNotFoundError(
+        "Catálogo não encontrado. Procurei em:\n"
+        f"{tried}\n"
+        "Defina GARIMPO_CATALOG_DIR ou rode a partir de um checkout do repo."
+    )
 
 
 def load_catalog_file(path: Path) -> Catalog:

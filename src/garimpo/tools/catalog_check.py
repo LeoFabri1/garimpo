@@ -5,11 +5,18 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from garimpo.catalog.loader import default_catalog_dir, load_catalog_file
+from garimpo.catalog.loader import (
+    CatalogNotFoundError,
+    default_catalog_dir,
+    load_catalog_file,
+)
 
 
 def check_catalogs(catalog_dir: Path | None = None) -> list[str]:
-    root = catalog_dir or default_catalog_dir()
+    try:
+        root = catalog_dir or default_catalog_dir()
+    except CatalogNotFoundError as exc:
+        return [str(exc)]
     errors: list[str] = []
     paths = [root / "gpu.json"]
     categories = root / "categories"
