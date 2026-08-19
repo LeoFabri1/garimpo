@@ -1,19 +1,49 @@
 {
   "$schema": "../gpu.schema.json",
   "meta": {
-    "perf_basis": "placeholder monotônico — curadoria comunitária",
-    "perf_reference": "placeholder = 100",
+    "perf_basis": "aproximação monotônica declarada — curadoria inicial, não benchmark oficial",
+    "perf_reference": "ryzen_7_7800x3d = 100",
     "updated_at": "2026-08-19",
     "category": "cpu"
   },
   "products": {
-    "cpu_placeholder": {
-      "display": "CPU (placeholder)",
-      "vendor": "generic",
+    "ryzen_7_7800x3d": {
+      "display": "Ryzen 7 7800X3D",
+      "vendor": "amd",
       "perf": 100,
-      "price_range": [500, 5000],
-      "aliases": ["ryzen", "core i7", "core i9"],
-      "negative_aliases": []
+      "msrp_brl": 2499,
+      "price_range": [1200, 4500],
+      "aliases": [
+        "ryzen 7 7800x3d",
+        "7800x3d",
+        "r7 7800x3d",
+        "amd 7800x3d"
+      ],
+      "negative_aliases": ["9800x3d", "5700x3d"]
+    },
+    "ryzen_7_9800x3d": {
+      "display": "Ryzen 7 9800X3D",
+      "vendor": "amd",
+      "perf": 118,
+      "price_range": [1800, 5500],
+      "aliases": ["ryzen 7 9800x3d", "9800x3d", "r7 9800x3d"],
+      "negative_aliases": ["7800x3d"]
+    },
+    "core_i7_14700k": {
+      "display": "Core i7-14700K",
+      "vendor": "intel",
+      "perf": 95,
+      "price_range": [1400, 4000],
+      "aliases": ["i7-14700k", "i7 14700k", "core i7 14700k", "14700k"],
+      "negative_aliases": ["14700kf", "14700"]
+    },
+    "core_i9_14900k": {
+      "display": "Core i9-14900K",
+      "vendor": "intel",
+      "perf": 110,
+      "price_range": [2000, 5500],
+      "aliases": ["i9-14900k", "i9 14900k", "core i9 14900k", "14900k"],
+      "negative_aliases": ["14900kf"]
     }
   }
 }

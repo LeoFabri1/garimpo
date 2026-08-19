@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Sync
-        run: uv sync --extra telethon --extra dev
+        run: uv sync --extra telethon --extra pyro --extra dev
       - name: Ruff
         run: uv run ruff check src tests
       - name: Pytest

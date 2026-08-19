@@ -13,10 +13,11 @@ def test_catalog_check_clean() -> None:
 
 def test_load_category_placeholder() -> None:
     cat = load_category_catalog("notebook")
-    assert "notebook_placeholder" in cat.products
+    assert "notebook_rtx_4060" in cat.products
 
 
 def test_merge_watch_categories() -> None:
-    merged = load_catalog_for_watch(["gpu", "notebook"])
+    merged = load_catalog_for_watch(["gpu", "notebook", "cpu"])
     assert "rtx_5070_ti" in merged.products
-    assert "notebook_placeholder" in merged.products
+    assert "notebook_rtx_4060" in merged.products
+    assert "ryzen_7_7800x3d" in merged.products

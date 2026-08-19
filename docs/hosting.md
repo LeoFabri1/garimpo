@@ -55,3 +55,32 @@ sqlite3 data/garimpo.db ".backup /backup/garimpo-$(date +%F).db"
 ```
 
 Weekly cron. The DB is the asset.
+
+## Migrating MTProto backend (Telethon → pyrotgfork)
+
+Garimpo talks to Telegram only through `MTProtoClient`. Default is Telethon
+(`telegram.backend: telethon`). If Telethon stops tracking API layers, switch:
+
+```bash
+uv sync --extra pyro
+```
+
+```yaml
+telegram:
+  backend: pyrotgfork
+  session: data/session.session   # same path layout; pyrogram uses name+workdir
+  # session_string_env: TG_SESSION  # preferred on ephemeral hosts
+```
+
+**Session files are not always interchangeable.** Prefer:
+
+1. Export a string session if your host already supports it, **or**
+2. Re-run `garimpo login --qr` on the **secondary** number (same ban risk rules).
+
+Do **not** mix backends against the same live session file without testing
+`--once` first. Contract tests (`tests/unit/test_mtproto_contract.py`) define the
+behavior both backends must keep; Pyro mapping is covered in
+`tests/unit/test_pyro_stub.py`.
+
+Trigger to migrate: Telethon pin fails CI against current Telegram layers, or
+you need a fork that tracks updates faster than the Telethon pin.

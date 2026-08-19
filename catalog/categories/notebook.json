@@ -1,19 +1,50 @@
 {
   "$schema": "../gpu.schema.json",
   "meta": {
-    "perf_basis": "placeholder monotônico — curadoria comunitária",
-    "perf_reference": "placeholder = 100",
+    "perf_basis": "aproximação monotônica por faixa de GPU interna — curadoria inicial",
+    "perf_reference": "notebook_rtx_4060 = 100",
     "updated_at": "2026-08-19",
     "category": "notebook"
   },
   "products": {
-    "notebook_placeholder": {
-      "display": "Notebook (placeholder)",
+    "notebook_rtx_4060": {
+      "display": "Notebook RTX 4060",
       "vendor": "generic",
       "perf": 100,
-      "price_range": [2000, 15000],
-      "aliases": ["notebook gamer", "laptop"],
-      "negative_aliases": []
+      "price_range": [4500, 12000],
+      "aliases": [
+        "notebook rtx 4060",
+        "laptop rtx 4060",
+        "notebook 4060",
+        "rtx 4060 notebook"
+      ],
+      "negative_aliases": ["4070", "4050", "desktop"]
+    },
+    "notebook_rtx_4070": {
+      "display": "Notebook RTX 4070",
+      "vendor": "generic",
+      "perf": 125,
+      "price_range": [6000, 15000],
+      "aliases": [
+        "notebook rtx 4070",
+        "laptop rtx 4070",
+        "notebook 4070",
+        "rtx 4070 notebook"
+      ],
+      "negative_aliases": ["4060", "4080", "desktop"]
+    },
+    "notebook_rtx_4050": {
+      "display": "Notebook RTX 4050",
+      "vendor": "generic",
+      "perf": 80,
+      "price_range": [3500, 9000],
+      "aliases": [
+        "notebook rtx 4050",
+        "laptop rtx 4050",
+        "notebook 4050",
+        "rtx 4050 notebook"
+      ],
+      "negative_aliases": ["4060", "4070", "desktop"]
     }
   }
 }

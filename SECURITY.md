@@ -13,6 +13,10 @@ Telegram ToS grey area. **Restriction or ban of the phone number is a real
 risk.** Always use a **secondary number**. The CLI `garimpo login` shows an
 explicit banner and requires typing `secundario` before continuing.
 
+Default backend is Telethon (`telegram.backend: telethon`). A Protocol-compatible
+`pyrotgfork` backend is available (`uv sync --extra pyro`) if you need to migrate —
+see [docs/hosting.md](docs/hosting.md).
+
 ## What is sensitive
 
 | Item | Severity if leaked | What to do |
