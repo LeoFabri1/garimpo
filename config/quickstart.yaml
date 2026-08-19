@@ -1,11 +1,14 @@
 alerts:
-  channel: console
+  channel: console            # dry-run / local; use saved_messages após login
   critical:
     percentile: 0.03
     silent: false
   normal:
     percentile: 0.15
     silent: true
+  cooldown_hours: 6
+  cooldown_override_drop: 0.03
+  max_per_hour: 8
 
 sources:
   - "@promobit_hardware"

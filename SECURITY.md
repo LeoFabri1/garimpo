@@ -6,6 +6,13 @@ Open a **private** security advisory on GitHub, or email the maintainer listed
 on the repository. Do not file a public issue for leaked sessions, tokens, or
 account-takeover risks.
 
+## Userbot / ban risk
+
+Garimpo logs in as a **user account** (MTProto), not a BotFather bot. That is a
+Telegram ToS grey area. **Restriction or ban of the phone number is a real
+risk.** Always use a **secondary number**. The CLI `garimpo login` shows an
+explicit banner and requires typing `secundario` before continuing.
+
 ## What is sensitive
 
 | Item | Severity if leaked | What to do |

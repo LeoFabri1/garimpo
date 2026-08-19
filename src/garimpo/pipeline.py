@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from garimpo.alert.channels.console import ConsoleChannel
+from garimpo.alert.dispatcher import Dispatcher
 from garimpo.catalog import ModelIndex, load_gpu_catalog, load_stores
 from garimpo.models.alert import Level, ScoredOffer
 from garimpo.models.raw import RawMessage
@@ -40,18 +40,34 @@ class Pipeline:
         self,
         settings: Settings,
         *,
-        channel: ConsoleChannel | None = None,
+        channel: object | None = None,
         dry_run: bool = False,
+        client: object | None = None,
     ) -> None:
         self.settings = settings
         self.dry_run = dry_run
-        self.channel = channel or ConsoleChannel()
+        if channel is not None:
+            self.channel = channel  # type: ignore[assignment]
+        else:
+            from garimpo.alert.channels.factory import build_channel
+
+            self.channel = build_channel(
+                settings,
+                client=client,  # type: ignore[arg-type]
+                force_console=dry_run or settings.alerts.channel == "console",
+            )
         self.catalog = load_gpu_catalog()
         self.index = ModelIndex(self.catalog)
         self.parser = GenericParser(self.index)
         self.stores = load_stores()
         self.conn = connect(settings.storage.path)
         self.rules = [_to_watch_rule(r, self.index) for r in settings.watch]
+        self.dispatcher = Dispatcher(
+            self.conn,
+            self.channel,  # type: ignore[arg-type]
+            settings.alerts,
+            dry_run=dry_run,
+        )
 
     def close(self) -> None:
         self.conn.close()
@@ -168,34 +184,12 @@ class Pipeline:
                 status="parsed", raw_id=raw_id, offer_id=offer_id, scored=scored
             )
 
-        silent = (
-            self.settings.alerts.critical.silent
-            if scored.level == Level.CRITICAL
-            else self.settings.alerts.normal.silent
+        dispatched = self.dispatcher.dispatch(
+            scored, offer_id=offer_id, now=now_naive
         )
-        if not self.dry_run:
-            self.channel.send(scored, silent=silent)
-            alerts_repo.insert_alert(
-                self.conn,
-                offer_id=offer_id,
-                scored=scored,
-                channel=self.channel.name,
-                status="sent",
-                sent_at=now_naive,
-            )
-        else:
-            self.channel.send(scored, silent=silent)
-            alerts_repo.insert_alert(
-                self.conn,
-                offer_id=offer_id,
-                scored=scored,
-                channel=self.channel.name,
-                status="dry_run",
-                sent_at=now_naive,
-            )
-
+        status = "alerted" if dispatched.status in {"sent", "dry_run"} else dispatched.status
         return PipelineResult(
-            status="alerted", raw_id=raw_id, offer_id=offer_id, scored=scored
+            status=status, raw_id=raw_id, offer_id=offer_id, scored=scored
         )
 
 

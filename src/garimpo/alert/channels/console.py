@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import sys
 
-from garimpo.models.alert import Level, ScoredOffer
+from garimpo.alert.format import format_alert
+from garimpo.models.alert import ScoredOffer
 
 
 class ConsoleChannel:
@@ -14,14 +15,7 @@ class ConsoleChannel:
         self._stream = stream or sys.stdout
 
     def send(self, scored: ScoredOffer, *, silent: bool = False) -> None:
-        offer = scored.offer
-        badge = "🚨" if scored.level == Level.CRITICAL else "📉"
-        lines = [
-            f"{badge} [{scored.level.value}] {offer.model_key} — R$ {offer.price.amount}",
-            f"  store={offer.store or '?'} method={offer.price.method} "
-            f"confidence={offer.confidence:.2f}",
-            f"  {scored.reason}",
-        ]
+        text = format_alert(scored)
         if silent:
-            lines.append("  (silent)")
-        print("\n".join(lines), file=self._stream)  # noqa: T201
+            text = f"{text}\n  (silent)"
+        print(text, file=self._stream)  # noqa: T201

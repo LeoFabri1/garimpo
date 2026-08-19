@@ -1,6 +1,19 @@
 # Login Telegram (api_id / api_hash / QR)
 
-Passo a passo completo do DESIGN §20. Resumo operacional:
+## Risco de ban (obrigatório ler)
+
+O Garimpo é um **userbot**: autentica como conta de usuário via MTProto e lê
+grupos. Isso é **zona cinza no ToS do Telegram**.
+
+- Existe **risco real** de restrição ou **banimento do número** da sessão.
+- Use **número secundário**. Nunca o Telegram principal.
+- No `garimpo login`, um banner aparece e você precisa digitar `secundario`
+  para continuar (ou `--i-understand` em automação — o risco continua o mesmo).
+
+O cliente **não** envia mensagens nos grupos monitorados, não reage e não marca
+como lido. Escrita é só para você (Saved Messages / bot próprio).
+
+---
 
 ## 1. Criar aplicação
 
@@ -25,8 +38,9 @@ uv sync --extra telethon
 uv run garimpo login --qr
 ```
 
-No app Telegram: **Configurações → Dispositivos → Conectar dispositivo** e
-escaneie o QR. Contas com 2FA pedem senha (`--password`).
+1. Leia o aviso de ban e digite `secundario`
+2. Escaneie o QR: Telegram → **Configurações → Dispositivos → Conectar dispositivo**
+3. Contas com 2FA: `--password`
 
 Após ~3 falhas o comando **aborta** de propósito (FloodWait de ~22h no Telegram).
 
@@ -48,6 +62,5 @@ A string é acesso total à conta. Revogue em Dispositivos se vazar.
 
 ## Segurança
 
-- Use número **secundário**, nunca o principal (risco de ban — userbot)
 - `data/*.session` está no `.gitignore`
 - Detalhes: [SECURITY.md](../SECURITY.md) · DESIGN §20 / §22

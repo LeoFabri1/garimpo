@@ -7,6 +7,10 @@ from typing import Any
 
 async def login_with_qr(client: Any, *, password: str | None = None) -> None:
     """Show QR URL; user scans via Telegram → Devices → Connect."""
+    print(
+        "Lembrete: escaneie com o Telegram do NÚMERO SECUNDÁRIO "
+        "(não o principal).\n"
+    )
     qr_login = await client.qr_login()
     url = qr_login.url
 

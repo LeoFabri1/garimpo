@@ -51,12 +51,16 @@ async def run_login(
     export_string: bool = False,
     phone: str | None = None,
     password: str | None = None,
+    skip_risk_confirm: bool = False,
 ) -> str | None:
     """Perform login. Returns session string if export_string else None."""
+    from garimpo.auth.warnings import confirm_userbot_risk
     from garimpo.ingest.clients.telethon_client import (
         TelethonClient,
         TelethonUnavailableError,
     )
+
+    confirm_userbot_risk(skip=skip_risk_confirm)
 
     try:
         api_id, api_hash = credentials_from_settings(settings)

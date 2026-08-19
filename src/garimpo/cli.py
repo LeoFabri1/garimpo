@@ -57,11 +57,16 @@ def login_cmd(
         None, "--password", help="2FA password if required."
     ),
     phone: str | None = typer.Option(None, "--phone", help="Phone for --code login."),
+    i_understand: bool = typer.Option(
+        False,
+        "--i-understand",
+        help="Skip risk confirmation (CI). Still use a secondary number.",
+    ),
     config: Path | None = typer.Option(
         None, "--config", "-c", help="Path to config YAML."
     ),
 ) -> None:
-    """Authenticate Telegram session (use a secondary number)."""
+    """Authenticate Telegram session. Requires secondary number acknowledgement."""
     import asyncio
 
     from garimpo.auth.errors import LoginAborted, LoginConfigError
@@ -78,6 +83,7 @@ def login_cmd(
                 export_string=export_string,
                 phone=phone,
                 password=password,
+                skip_risk_confirm=i_understand,
             )
         )
     except (LoginConfigError, LoginAborted) as exc:
@@ -140,8 +146,8 @@ def run_cmd(
         typer.echo("Nenhuma source em config. Adicione sources: no YAML.", err=True)
         raise typer.Exit(code=1)
 
-    pipeline = Pipeline(settings, dry_run=False)
     client = build_client(settings)
+    pipeline = Pipeline(settings, dry_run=False, client=client)
     try:
         if once:
             n = asyncio.run(run_once(client, pipeline, sources))
