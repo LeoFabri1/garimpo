@@ -24,10 +24,25 @@ catalog:
 watch:
   - name: gpu-principal
     category: gpu
-    models: ["RTX 5070 Ti", "RTX 5080", "RX 9070 XT"]
+    models:
+      - "RTX 5070 Ti"
+      - "RTX 5080"
+      - "RX 9070 XT"
+      - "RTX 4070 Super"
+      - "RX 7800 XT"
     max_price: 6000
     condition: [new]
-    stores_exclude: ["marketplace_generico"]
+    stores_exclude: ["marketplace_generico", "aliexpress"]
+
+  # - name: notebook-gamer
+  #   category: notebook
+  #   models: ["Notebook RTX 4060", "Notebook RTX 4070"]
+  #   max_price: 8000
+
+  # - name: cpu-x3d
+  #   category: cpu
+  #   models: ["Ryzen 7 7800X3D", "Ryzen 7 9800X3D"]
+  #   max_price: 2800
 
 scoring:
   window_days: 90

@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from garimpo.catalog import ModelIndex, load_gpu_catalog
+from garimpo.catalog import ModelIndex, load_catalog_for_watch, load_gpu_catalog
 
 
 def test_load_gpu_catalog() -> None:
     catalog = load_gpu_catalog()
     assert "rtx_5070_ti" in catalog.products
     assert catalog.products["rtx_5070_ti"].perf == 100
+    assert "rtx_4090" in catalog.products
+    assert "rx_7800_xt" in catalog.products
 
 
 def test_longest_alias_wins_5070_ti() -> None:
@@ -30,3 +32,46 @@ def test_9070_xt_not_bare_9070() -> None:
     result = index.resolve("RX 9070 XT XFX R$ 5499")
     assert result is not None
     assert result.model_key == "rx_9070_xt"
+
+
+def test_4070_super_not_plain_4070() -> None:
+    index = ModelIndex(load_gpu_catalog())
+    result = index.resolve("RTX 4070 Super MSI R$ 3899")
+    assert result is not None
+    assert result.model_key == "rtx_4070_super"
+
+
+def test_notebook_beats_desktop_4060_when_merged() -> None:
+    index = ModelIndex(load_catalog_for_watch(["gpu", "notebook"]))
+    result = index.resolve("Notebook RTX 4060 Acer Nitro R$ 5499")
+    assert result is not None
+    assert result.model_key == "notebook_rtx_4060"
+
+
+def test_desktop_4060_rejects_notebook_word() -> None:
+    index = ModelIndex(load_gpu_catalog())
+    result = index.resolve("RTX 4060 ASUS Dual OC desktop R$ 1899")
+    assert result is not None
+    assert result.model_key == "rtx_4060"
+
+
+def test_desktop_4060_not_chosen_for_notebook_text() -> None:
+    index = ModelIndex(load_gpu_catalog())
+    # GPU-only catalog: notebook aliases absent → should not map to desktop
+    # when "notebook" triggers negative on desktop 4060
+    result = index.resolve("notebook rtx 4060 barato")
+    assert result is None or result.model_key != "rtx_4060"
+
+
+def test_7900_xtx_not_xt() -> None:
+    index = ModelIndex(load_gpu_catalog())
+    result = index.resolve("RX 7900 XTX Sapphire R$ 6200")
+    assert result is not None
+    assert result.model_key == "rx_7900_xtx"
+
+
+def test_cpu_9800_not_7800() -> None:
+    index = ModelIndex(load_catalog_for_watch(["cpu"]))
+    result = index.resolve("AMD Ryzen 7 9800X3D R$ 2999")
+    assert result is not None
+    assert result.model_key == "ryzen_7_9800x3d"

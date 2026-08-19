@@ -1,12 +1,25 @@
 {
   "$schema": "../gpu.schema.json",
   "meta": {
-    "perf_basis": "aproximação monotônica declarada — curadoria inicial, não benchmark oficial",
+    "perf_basis": "aproximação monotônica gaming 1080p/1440p — curadoria comunitária, não benchmark oficial",
     "perf_reference": "ryzen_7_7800x3d = 100",
     "updated_at": "2026-08-19",
     "category": "cpu"
   },
   "products": {
+    "ryzen_7_9800x3d": {
+      "display": "Ryzen 7 9800X3D",
+      "vendor": "amd",
+      "perf": 118,
+      "price_range": [1800, 5500],
+      "aliases": [
+        "ryzen 7 9800x3d",
+        "9800x3d",
+        "r7 9800x3d",
+        "amd 9800x3d"
+      ],
+      "negative_aliases": ["7800x3d", "5700x3d", "9900x3d"]
+    },
     "ryzen_7_7800x3d": {
       "display": "Ryzen 7 7800X3D",
       "vendor": "amd",
@@ -21,29 +34,114 @@
       ],
       "negative_aliases": ["9800x3d", "5700x3d"]
     },
-    "ryzen_7_9800x3d": {
-      "display": "Ryzen 7 9800X3D",
+    "ryzen_5_5700x3d": {
+      "display": "Ryzen 5 5700X3D",
       "vendor": "amd",
-      "perf": 118,
-      "price_range": [1800, 5500],
-      "aliases": ["ryzen 7 9800x3d", "9800x3d", "r7 9800x3d"],
-      "negative_aliases": ["7800x3d"]
+      "perf": 78,
+      "price_range": [700, 2500],
+      "aliases": [
+        "ryzen 5 5700x3d",
+        "5700x3d",
+        "r5 5700x3d",
+        "amd 5700x3d"
+      ],
+      "negative_aliases": ["7800x3d", "9800x3d", "5600x"]
     },
-    "core_i7_14700k": {
-      "display": "Core i7-14700K",
-      "vendor": "intel",
-      "perf": 95,
-      "price_range": [1400, 4000],
-      "aliases": ["i7-14700k", "i7 14700k", "core i7 14700k", "14700k"],
-      "negative_aliases": ["14700kf", "14700"]
+    "ryzen_5_5600": {
+      "display": "Ryzen 5 5600",
+      "vendor": "amd",
+      "perf": 55,
+      "price_range": [400, 1500],
+      "aliases": [
+        "ryzen 5 5600",
+        "r5 5600",
+        "amd 5600"
+      ],
+      "negative_aliases": ["5600x", "5600g", "5700", "7600"]
+    },
+    "ryzen_5_5600x": {
+      "display": "Ryzen 5 5600X",
+      "vendor": "amd",
+      "perf": 58,
+      "price_range": [450, 1600],
+      "aliases": [
+        "ryzen 5 5600x",
+        "5600x",
+        "r5 5600x"
+      ],
+      "negative_aliases": ["5600g", "5700x3d"]
+    },
+    "ryzen_5_7600": {
+      "display": "Ryzen 5 7600",
+      "vendor": "amd",
+      "perf": 72,
+      "price_range": [700, 2200],
+      "aliases": [
+        "ryzen 5 7600",
+        "r5 7600",
+        "amd 7600"
+      ],
+      "negative_aliases": ["7600x", "7600x3d", "7800"]
     },
     "core_i9_14900k": {
       "display": "Core i9-14900K",
       "vendor": "intel",
       "perf": 110,
       "price_range": [2000, 5500],
-      "aliases": ["i9-14900k", "i9 14900k", "core i9 14900k", "14900k"],
-      "negative_aliases": ["14900kf"]
+      "aliases": [
+        "i9-14900k",
+        "i9 14900k",
+        "core i9 14900k",
+        "14900k",
+        "i9-14900kf",
+        "14900kf"
+      ],
+      "negative_aliases": ["14900ks", "14700"]
+    },
+    "core_i7_14700k": {
+      "display": "Core i7-14700K",
+      "vendor": "intel",
+      "perf": 95,
+      "price_range": [1400, 4000],
+      "aliases": [
+        "i7-14700k",
+        "i7 14700k",
+        "core i7 14700k",
+        "14700k",
+        "i7-14700kf",
+        "14700kf"
+      ],
+      "negative_aliases": ["14700f", "14600", "14900"]
+    },
+    "core_i5_14600k": {
+      "display": "Core i5-14600K",
+      "vendor": "intel",
+      "perf": 82,
+      "price_range": [1000, 3000],
+      "aliases": [
+        "i5-14600k",
+        "i5 14600k",
+        "core i5 14600k",
+        "14600k",
+        "i5-14600kf",
+        "14600kf"
+      ],
+      "negative_aliases": ["14400", "14700"]
+    },
+    "core_i5_14400f": {
+      "display": "Core i5-14400F",
+      "vendor": "intel",
+      "perf": 68,
+      "price_range": [700, 2200],
+      "aliases": [
+        "i5-14400f",
+        "i5 14400f",
+        "core i5 14400f",
+        "14400f",
+        "i5-14400",
+        "14400"
+      ],
+      "negative_aliases": ["14600", "14700"]
     }
   }
 }

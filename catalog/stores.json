@@ -1,22 +1,50 @@
 {
   "kabum": {
     "display": "Kabum",
-    "domains": ["kabum.com.br", "link.kabum.com.br"],
+    "domains": ["kabum.com.br", "link.kabum.com.br", "www.kabum.com.br"],
     "trust": 1.0
   },
   "terabyte": {
     "display": "Terabyte",
-    "domains": ["terabyteshop.com.br"],
+    "domains": ["terabyteshop.com.br", "www.terabyteshop.com.br"],
     "trust": 1.0
   },
   "pichau": {
     "display": "Pichau",
-    "domains": ["pichau.com.br"],
+    "domains": ["pichau.com.br", "www.pichau.com.br"],
     "trust": 1.0
+  },
+  "amazon": {
+    "display": "Amazon",
+    "domains": ["amazon.com.br", "amzn.to", "www.amazon.com.br"],
+    "trust": 0.85,
+    "note": "marketplace — conferir vendedor"
+  },
+  "magalu": {
+    "display": "Magazine Luiza",
+    "domains": ["magazineluiza.com.br", "magazinevoce.com.br", "magalu.com"],
+    "trust": 0.9
+  },
+  "americanas": {
+    "display": "Americanas",
+    "domains": ["americanas.com.br", "www.americanas.com.br"],
+    "trust": 0.75,
+    "note": "histórico irregular de anúncios"
+  },
+  "aliexpress": {
+    "display": "AliExpress",
+    "domains": ["aliexpress.com", "pt.aliexpress.com"],
+    "trust": 0.55,
+    "note": "importação — prazo e imposto"
+  },
+  "gkef": {
+    "display": "GK InfoStore",
+    "domains": ["gkinfostore.com.br"],
+    "trust": 0.95
   },
   "marketplace_generico": {
     "display": "Marketplace",
-    "domains": ["mercadolivre.com.br", "shopee.com.br"],
+    "domains": ["mercadolivre.com.br", "produto.mercadolivre.com.br", "shopee.com.br"],
     "trust": 0.6,
     "note": "vendedor terceiro — risco de anúncio falso"
   }

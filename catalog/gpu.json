@@ -1,11 +1,42 @@
 {
   "$schema": "./gpu.schema.json",
   "meta": {
-    "perf_basis": "aproximação monotônica declarada — não copiar tabelas proprietárias",
+    "perf_basis": "aproximação monotônica declarada (1440p raster relativo) — não copiar tabelas proprietárias",
     "perf_reference": "rtx_5070_ti = 100",
-    "updated_at": "2026-08-01"
+    "updated_at": "2026-08-19"
   },
   "products": {
+    "rtx_5090": {
+      "display": "RTX 5090",
+      "vendor": "nvidia",
+      "generation": "blackwell",
+      "vram_gb": 32,
+      "perf": 180,
+      "price_range": [12000, 28000],
+      "aliases": [
+        "rtx 5090",
+        "rtx5090",
+        "geforce rtx 5090",
+        "5090"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
+    "rtx_5080": {
+      "display": "RTX 5080",
+      "vendor": "nvidia",
+      "generation": "blackwell",
+      "vram_gb": 16,
+      "perf": 133,
+      "msrp_brl": 9999,
+      "price_range": [5000, 16000],
+      "aliases": [
+        "rtx 5080",
+        "rtx5080",
+        "geforce rtx 5080",
+        "5080"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
     "rtx_5070_ti": {
       "display": "RTX 5070 Ti",
       "vendor": "nvidia",
@@ -22,18 +53,7 @@
         "geforce rtx 5070 ti",
         "rtx 5070ti"
       ],
-      "negative_aliases": ["5070"]
-    },
-    "rtx_5080": {
-      "display": "RTX 5080",
-      "vendor": "nvidia",
-      "generation": "blackwell",
-      "vram_gb": 16,
-      "perf": 133,
-      "msrp_brl": 9999,
-      "price_range": [5000, 16000],
-      "aliases": ["rtx 5080", "rtx5080", "5080", "geforce rtx 5080"],
-      "negative_aliases": []
+      "negative_aliases": ["notebook", "laptop"]
     },
     "rtx_5070": {
       "display": "RTX 5070",
@@ -43,8 +63,185 @@
       "perf": 85,
       "msrp_brl": 5999,
       "price_range": [2500, 10000],
-      "aliases": ["rtx 5070", "rtx5070", "geforce rtx 5070"],
-      "negative_aliases": ["5070 ti", "5070ti"]
+      "aliases": [
+        "rtx 5070",
+        "rtx5070",
+        "geforce rtx 5070"
+      ],
+      "negative_aliases": ["5070 ti", "5070ti", "notebook", "laptop"]
+    },
+    "rtx_5060_ti": {
+      "display": "RTX 5060 Ti",
+      "vendor": "nvidia",
+      "generation": "blackwell",
+      "vram_gb": 16,
+      "perf": 72,
+      "price_range": [2000, 7000],
+      "aliases": [
+        "rtx 5060 ti",
+        "rtx5060ti",
+        "5060ti",
+        "5060 ti",
+        "geforce rtx 5060 ti"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
+    "rtx_5060": {
+      "display": "RTX 5060",
+      "vendor": "nvidia",
+      "generation": "blackwell",
+      "vram_gb": 8,
+      "perf": 55,
+      "price_range": [1500, 5000],
+      "aliases": [
+        "rtx 5060",
+        "rtx5060",
+        "geforce rtx 5060"
+      ],
+      "negative_aliases": ["5060 ti", "5060ti", "notebook", "laptop"]
+    },
+    "rtx_4090": {
+      "display": "RTX 4090",
+      "vendor": "nvidia",
+      "generation": "ada",
+      "vram_gb": 24,
+      "perf": 145,
+      "price_range": [7000, 20000],
+      "aliases": [
+        "rtx 4090",
+        "rtx4090",
+        "geforce rtx 4090",
+        "4090"
+      ],
+      "negative_aliases": ["notebook", "laptop", "4090 d", "4090d"]
+    },
+    "rtx_4080_super": {
+      "display": "RTX 4080 Super",
+      "vendor": "nvidia",
+      "generation": "ada",
+      "vram_gb": 16,
+      "perf": 125,
+      "price_range": [4500, 14000],
+      "aliases": [
+        "rtx 4080 super",
+        "rtx4080super",
+        "4080 super",
+        "4080super",
+        "geforce rtx 4080 super"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
+    "rtx_4080": {
+      "display": "RTX 4080",
+      "vendor": "nvidia",
+      "generation": "ada",
+      "vram_gb": 16,
+      "perf": 118,
+      "price_range": [4000, 13000],
+      "aliases": [
+        "rtx 4080",
+        "rtx4080",
+        "geforce rtx 4080"
+      ],
+      "negative_aliases": ["4080 super", "4080super", "notebook", "laptop"]
+    },
+    "rtx_4070_ti_super": {
+      "display": "RTX 4070 Ti Super",
+      "vendor": "nvidia",
+      "generation": "ada",
+      "vram_gb": 16,
+      "perf": 108,
+      "price_range": [3500, 10000],
+      "aliases": [
+        "rtx 4070 ti super",
+        "4070 ti super",
+        "4070ti super",
+        "4070tisuper",
+        "geforce rtx 4070 ti super"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
+    "rtx_4070_ti": {
+      "display": "RTX 4070 Ti",
+      "vendor": "nvidia",
+      "generation": "ada",
+      "vram_gb": 12,
+      "perf": 98,
+      "price_range": [3000, 9000],
+      "aliases": [
+        "rtx 4070 ti",
+        "rtx4070ti",
+        "4070ti",
+        "4070 ti",
+        "geforce rtx 4070 ti"
+      ],
+      "negative_aliases": ["4070 ti super", "4070tisuper", "notebook", "laptop"]
+    },
+    "rtx_4070_super": {
+      "display": "RTX 4070 Super",
+      "vendor": "nvidia",
+      "generation": "ada",
+      "vram_gb": 12,
+      "perf": 90,
+      "price_range": [2500, 8000],
+      "aliases": [
+        "rtx 4070 super",
+        "4070 super",
+        "4070super",
+        "geforce rtx 4070 super"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
+    "rtx_4070": {
+      "display": "RTX 4070",
+      "vendor": "nvidia",
+      "generation": "ada",
+      "vram_gb": 12,
+      "perf": 78,
+      "price_range": [2000, 7000],
+      "aliases": [
+        "rtx 4070",
+        "rtx4070",
+        "geforce rtx 4070"
+      ],
+      "negative_aliases": [
+        "4070 ti",
+        "4070ti",
+        "4070 super",
+        "4070super",
+        "notebook",
+        "laptop"
+      ]
+    },
+    "rtx_4060_ti": {
+      "display": "RTX 4060 Ti",
+      "vendor": "nvidia",
+      "generation": "ada",
+      "vram_gb": 8,
+      "perf": 58,
+      "price_range": [1500, 5500],
+      "aliases": [
+        "rtx 4060 ti",
+        "rtx4060ti",
+        "4060ti",
+        "4060 ti",
+        "geforce rtx 4060 ti"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
+    "rtx_4060": {
+      "display": "RTX 4060",
+      "vendor": "nvidia",
+      "generation": "ada",
+      "vram_gb": 8,
+      "perf": 45,
+      "price_range": [1200, 4500],
+      "aliases": [
+        "rtx 4060",
+        "rtx4060",
+        "geforce rtx 4060"
+      ],
+      "negative_aliases": ["4060 ti", "4060ti", "notebook", "laptop"]
     },
     "rx_9070_xt": {
       "display": "RX 9070 XT",
@@ -52,8 +249,14 @@
       "vram_gb": 16,
       "perf": 97,
       "price_range": [2800, 11000],
-      "aliases": ["rx 9070 xt", "9070xt", "9070 xt", "radeon rx 9070 xt"],
-      "negative_aliases": ["9070"]
+      "aliases": [
+        "rx 9070 xt",
+        "9070xt",
+        "9070 xt",
+        "radeon rx 9070 xt",
+        "radeon 9070 xt"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
     },
     "rx_9070": {
       "display": "RX 9070",
@@ -61,8 +264,95 @@
       "vram_gb": 16,
       "perf": 88,
       "price_range": [2500, 10000],
-      "aliases": ["rx 9070", "9070", "radeon rx 9070"],
-      "negative_aliases": ["9070 xt", "9070xt"]
+      "aliases": [
+        "rx 9070",
+        "9070",
+        "radeon rx 9070",
+        "radeon 9070"
+      ],
+      "negative_aliases": ["9070 xt", "9070xt", "notebook", "laptop"]
+    },
+    "rx_7900_xtx": {
+      "display": "RX 7900 XTX",
+      "vendor": "amd",
+      "vram_gb": 24,
+      "perf": 120,
+      "price_range": [3500, 12000],
+      "aliases": [
+        "rx 7900 xtx",
+        "7900xtx",
+        "7900 xtx",
+        "radeon rx 7900 xtx"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
+    "rx_7900_xt": {
+      "display": "RX 7900 XT",
+      "vendor": "amd",
+      "vram_gb": 20,
+      "perf": 105,
+      "price_range": [2800, 10000],
+      "aliases": [
+        "rx 7900 xt",
+        "7900xt",
+        "7900 xt",
+        "radeon rx 7900 xt"
+      ],
+      "negative_aliases": ["7900 xtx", "7900xtx", "notebook", "laptop"]
+    },
+    "rx_7800_xt": {
+      "display": "RX 7800 XT",
+      "vendor": "amd",
+      "vram_gb": 16,
+      "perf": 85,
+      "price_range": [1800, 7000],
+      "aliases": [
+        "rx 7800 xt",
+        "7800xt",
+        "7800 xt",
+        "radeon rx 7800 xt"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
+    "rx_7600_xt": {
+      "display": "RX 7600 XT",
+      "vendor": "amd",
+      "vram_gb": 16,
+      "perf": 58,
+      "price_range": [1200, 4500],
+      "aliases": [
+        "rx 7600 xt",
+        "7600xt",
+        "7600 xt",
+        "radeon rx 7600 xt"
+      ],
+      "negative_aliases": ["notebook", "laptop"]
+    },
+    "rx_7600": {
+      "display": "RX 7600",
+      "vendor": "amd",
+      "vram_gb": 8,
+      "perf": 48,
+      "price_range": [1000, 4000],
+      "aliases": [
+        "rx 7600",
+        "radeon rx 7600"
+      ],
+      "negative_aliases": ["7600 xt", "7600xt", "notebook", "laptop"]
+    },
+    "arc_b580": {
+      "display": "Arc B580",
+      "vendor": "intel",
+      "generation": "battlemage",
+      "vram_gb": 12,
+      "perf": 52,
+      "price_range": [1200, 4000],
+      "aliases": [
+        "arc b580",
+        "intel arc b580",
+        "arc b 580"
+      ],
+      "negative_aliases": ["b570", "notebook", "laptop"]
     }
   }
 }

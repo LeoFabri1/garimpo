@@ -73,9 +73,31 @@ class ModelIndex:
 
 def _hits_negative(text: str, matched_alias: str, negatives: tuple[str, ...]) -> bool:
     for neg in negatives:
+        if neg not in text:
+            continue
         if neg == matched_alias:
             return True
-        # More specific form present → this product is the wrong one
-        if neg in text and len(neg) > len(matched_alias):
+        # Longer / more specific form present → wrong product
+        # e.g. matched "rtx 5070" but text has "5070 ti"
+        if len(neg) > len(matched_alias):
+            return True
+        # Class / form factors (notebook vs desktop, Ti/XT/Super)
+        if any(
+            tag in neg
+            for tag in (
+                " ti",
+                "ti",
+                " xt",
+                "xt",
+                " super",
+                "super",
+                "notebook",
+                "laptop",
+                "desktop",
+            )
+        ):
+            return True
+        # Sibling SKU token present (e.g. matched 4060 alias but text also has 4070)
+        if neg not in matched_alias:
             return True
     return False

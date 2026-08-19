@@ -1,24 +1,25 @@
 {
   "$schema": "../gpu.schema.json",
   "meta": {
-    "perf_basis": "aproximação monotônica por faixa de GPU interna — curadoria inicial",
+    "perf_basis": "aproximação monotônica por GPU mobile (classe, não SKU de chassis)",
     "perf_reference": "notebook_rtx_4060 = 100",
     "updated_at": "2026-08-19",
     "category": "notebook"
   },
   "products": {
-    "notebook_rtx_4060": {
-      "display": "Notebook RTX 4060",
+    "notebook_rtx_4080": {
+      "display": "Notebook RTX 4080",
       "vendor": "generic",
-      "perf": 100,
-      "price_range": [4500, 12000],
+      "perf": 155,
+      "price_range": [9000, 22000],
       "aliases": [
-        "notebook rtx 4060",
-        "laptop rtx 4060",
-        "notebook 4060",
-        "rtx 4060 notebook"
+        "notebook rtx 4080",
+        "laptop rtx 4080",
+        "notebook 4080",
+        "rtx 4080 notebook",
+        "rtx 4080 laptop"
       ],
-      "negative_aliases": ["4070", "4050", "desktop"]
+      "negative_aliases": ["desktop", "placa de video", "placa de vídeo"]
     },
     "notebook_rtx_4070": {
       "display": "Notebook RTX 4070",
@@ -29,9 +30,24 @@
         "notebook rtx 4070",
         "laptop rtx 4070",
         "notebook 4070",
-        "rtx 4070 notebook"
+        "rtx 4070 notebook",
+        "rtx 4070 laptop"
       ],
-      "negative_aliases": ["4060", "4080", "desktop"]
+      "negative_aliases": ["4060", "4050", "4080", "desktop", "placa de video", "placa de vídeo"]
+    },
+    "notebook_rtx_4060": {
+      "display": "Notebook RTX 4060",
+      "vendor": "generic",
+      "perf": 100,
+      "price_range": [4500, 12000],
+      "aliases": [
+        "notebook rtx 4060",
+        "laptop rtx 4060",
+        "notebook 4060",
+        "rtx 4060 notebook",
+        "rtx 4060 laptop"
+      ],
+      "negative_aliases": ["4070", "4050", "4080", "desktop", "placa de video", "placa de vídeo"]
     },
     "notebook_rtx_4050": {
       "display": "Notebook RTX 4050",
@@ -42,9 +58,24 @@
         "notebook rtx 4050",
         "laptop rtx 4050",
         "notebook 4050",
-        "rtx 4050 notebook"
+        "rtx 4050 notebook",
+        "rtx 4050 laptop"
       ],
-      "negative_aliases": ["4060", "4070", "desktop"]
+      "negative_aliases": ["4060", "4070", "desktop", "placa de video", "placa de vídeo"]
+    },
+    "notebook_rtx_3050": {
+      "display": "Notebook RTX 3050",
+      "vendor": "generic",
+      "perf": 55,
+      "price_range": [2500, 7000],
+      "aliases": [
+        "notebook rtx 3050",
+        "laptop rtx 3050",
+        "notebook 3050",
+        "rtx 3050 notebook",
+        "rtx 3050 laptop"
+      ],
+      "negative_aliases": ["4050", "4060", "desktop", "placa de video", "placa de vídeo"]
     }
   }
 }

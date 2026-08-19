@@ -25,12 +25,27 @@ _BRANDS = (
     "inno3d",
     "palit",
     "gainward",
+    "colorful",
+    "asrock",
+    "biostar",
+    "evga",
+    "acer",
+    "lenovo",
+    "dell",
+    "hp",
+    "samsung",
+    "avell",
 )
 
 _STORES = (
     ("kabum", re.compile(r"\bkabum\b", re.I)),
     ("terabyte", re.compile(r"\bterabyte\b", re.I)),
     ("pichau", re.compile(r"\bpichau\b", re.I)),
+    ("amazon", re.compile(r"\bamazon\b|\bamzn\b", re.I)),
+    ("magalu", re.compile(r"\b(magalu|magazine\s*luiza|magazine\s*você)\b", re.I)),
+    ("americanas", re.compile(r"\bamericanas\b", re.I)),
+    ("aliexpress", re.compile(r"\baliexpress\b", re.I)),
+    ("gkef", re.compile(r"\b(gk\s*info|gkinfostore)\b", re.I)),
     ("marketplace_generico", re.compile(r"\b(mercado\s*livre|shopee)\b", re.I)),
 )
 
