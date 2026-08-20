@@ -6,7 +6,6 @@ import sqlite3
 from datetime import UTC, datetime, timedelta
 
 from garimpo.ingest.base import MTProtoClient, SourceRef
-from garimpo.models.raw import RawMessage
 from garimpo.pipeline import Pipeline
 
 ALERT_MAX_AGE = timedelta(minutes=15)
@@ -68,15 +67,8 @@ async def recover_source(
     max_id = min_id
     for msg in messages:
         max_id = max(max_id, msg.tg_msg_id)
-        suppress = False
-        if alert:
-            age = _age(now, msg.received_at)
-            if age > ALERT_MAX_AGE:
-                suppress = True
-        if suppress:
-            _process_without_alert(pipeline, msg)
-        else:
-            pipeline.process(msg)
+        fresh = _age(now, msg.received_at) <= ALERT_MAX_AGE
+        pipeline.process(msg, alert=alert and fresh)
         count += 1
 
     if max_id > min_id:
@@ -90,26 +82,3 @@ def _age(now: datetime, received: datetime) -> timedelta:
     if now.tzinfo is None:
         now = now.replace(tzinfo=UTC)
     return now - received
-
-
-def _process_without_alert(pipeline: Pipeline, msg: RawMessage) -> None:
-    """Process into DB/history but skip channel send for stale recoveries."""
-    prev = pipeline.dry_run
-    # Force dry_run path that still records alerts as dry_run — better: temp flag
-    # Use a narrow approach: process normally but swap channel to no-op.
-    from garimpo.alert.channels.console import ConsoleChannel
-
-    class _NullChannel(ConsoleChannel):
-        name = "null"
-
-        def send(self, scored: object, *, silent: bool = False) -> None:  # type: ignore[override]
-            return
-
-    old_channel = pipeline.channel
-    pipeline.channel = _NullChannel()  # type: ignore[assignment]
-    pipeline.dry_run = True
-    try:
-        pipeline.process(msg)
-    finally:
-        pipeline.channel = old_channel
-        pipeline.dry_run = prev

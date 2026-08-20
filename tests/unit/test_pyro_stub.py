@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from types import SimpleNamespace
 
+import pytest
+
 from garimpo.ingest.base import SourceRef
 from garimpo.ingest.clients.pyro_client import (
     PyroClient,
@@ -53,6 +55,10 @@ def test_message_to_raw_uses_caption_when_no_text() -> None:
 
 
 def test_pyro_client_constructs_without_network() -> None:
+    # The mapping tests above need no backend, but constructing the client does.
+    # Skip instead of fail so `uv sync --extra telethon` (what docs/login.md
+    # tells users to run) leaves a green suite.
+    pytest.importorskip("pyrogram", reason="pyro extra not installed")
     client = PyroClient(
         session="data/pyro_test.session",
         api_id=12345,

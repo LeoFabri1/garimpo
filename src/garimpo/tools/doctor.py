@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from garimpo.catalog import ModelIndex, load_gpu_catalog
-from garimpo.settings import find_config_path, load_settings
+from garimpo.settings import Settings, find_config_path, load_settings
 from garimpo.store.db import connect, user_version
 
 
@@ -111,6 +111,28 @@ def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[Check
     else:
         results.append(CheckResult(True, "watch rules", f"{len(settings.watch)} regra(s)"))
 
+    results.append(_check_alert_channel(settings))
+
+    # Warn, not fail: --dry-run and -m are legitimate without any source.
+    enabled_sources = [s for s in settings.sources if s.enabled]
+    if not enabled_sources:
+        results.append(
+            CheckResult(
+                True,
+                "sources",
+                "nenhuma configurada — `run --dry-run` funciona, mas o run "
+                "ao vivo vai parar. Adicione seus canais em sources:",
+                warn=True,
+            )
+        )
+    else:
+        labels = ", ".join(
+            f"@{s.username}" if s.username else str(s.id) for s in enabled_sources
+        )
+        results.append(
+            CheckResult(True, "sources", f"{len(enabled_sources)}: {labels}")
+        )
+
     # Session file (informational until `garimpo login` runs)
     session = Path(settings.telegram.session)
     if session.is_file():
@@ -128,6 +150,43 @@ def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[Check
         )
 
     return results
+
+
+def _check_alert_channel(settings: Settings) -> CheckResult:
+    """A channel that cannot deliver is worse than no alerts: it fails at the
+    moment a deal fires, which is exactly when nobody is watching the logs."""
+    from garimpo.settings import BotSettings, WebhookSettings
+
+    channel = settings.alerts.channel
+    if channel == "console":
+        return CheckResult(True, "canal de alerta", "console (terminal)")
+
+    if channel == "saved_messages":
+        return CheckResult(
+            True, "canal de alerta", "saved_messages — usa a sessão do Telegram"
+        )
+
+    if channel == "bot":
+        bot = settings.alerts.bot or BotSettings()
+        missing = [
+            name
+            for name in (bot.token_env, bot.chat_id_env)
+            if not os.environ.get(name)
+        ]
+        if missing:
+            return CheckResult(
+                False,
+                "canal de alerta",
+                f"bot, mas falta no .env: {', '.join(missing)}",
+            )
+        return CheckResult(True, "canal de alerta", "bot (Bot API)")
+
+    wh = settings.alerts.webhook or WebhookSettings()
+    if not os.environ.get(wh.url_env):
+        return CheckResult(
+            False, "canal de alerta", f"webhook, mas falta no .env: {wh.url_env}"
+        )
+    return CheckResult(True, "canal de alerta", "webhook")
 
 
 def _check_session_auth(settings: object) -> list[CheckResult]:

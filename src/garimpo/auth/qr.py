@@ -22,7 +22,14 @@ async def login_with_qr(client: Any, *, password: str | None = None) -> None:
         qr.make(fit=True)
         qr.print_ascii(invert=True)
     except ImportError:
-        print(f"QR URL (abra no Telegram → Dispositivos → Conectar):\n{url}\n")
+        # A tg:// URL cannot be scanned from a phone, so say how to fix it
+        # rather than pretending this output is usable.
+        print(
+            "⚠ qrcode não instalado — não é possível desenhar o QR aqui.\n"
+            "  Instale com: uv sync --extra telethon\n"
+            "  (ou use `garimpo login --code` para login por código)\n\n"
+            f"Token bruto, só útil em outro renderizador de QR:\n{url}\n"
+        )
 
     print(
         "Escaneie: Telegram → Configurações → Dispositivos → Conectar dispositivo"

@@ -6,11 +6,63 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 
+import structlog
+
 from garimpo.alert.quiet import in_quiet_hours
 from garimpo.ingest.base import MTProtoClient, SourceRef
 from garimpo.ingest.recovery import recover_source
 from garimpo.models.raw import RawMessage
 from garimpo.pipeline import Pipeline
+
+log = structlog.get_logger(__name__)
+
+
+class NoSourcesResolvedError(RuntimeError):
+    """Every configured source failed to resolve."""
+
+    def __init__(self, failures: list[tuple[str, str]]) -> None:
+        detail = "\n".join(f"  • {label}: {err}" for label, err in failures)
+        super().__init__(
+            "Nenhuma source pôde ser resolvida no Telegram:\n"
+            f"{detail}\n\n"
+            "Verifique em config.yaml, na chave sources:\n"
+            "  • o @username está correto (sem o @ também funciona)\n"
+            "  • o grupo/canal existe e é público, ou a conta já é membro\n"
+            "  • para grupos privados, entre com a conta secundária primeiro"
+        )
+
+
+async def resolve_sources(
+    client: MTProtoClient, sources: list[SourceRef]
+) -> list[SourceRef]:
+    """Resolve sources, skipping the ones Telegram refuses.
+
+    A typo or an unjoined group should cost you that one source, not the whole
+    daemon with a raw Telethon traceback.
+    """
+    resolved: list[SourceRef] = []
+    failures: list[tuple[str, str]] = []
+    for src in sources:
+        label = src.username or str(src.tg_id)
+        try:
+            resolved.append(await client.resolve_source(src))
+        except Exception as exc:  # noqa: BLE001 - backend-specific error zoo
+            failures.append((label, str(exc)))
+            log.warning("source_unresolved", source=label, error=str(exc))
+
+    if failures and not resolved:
+        raise NoSourcesResolvedError(failures)
+    if failures:
+        log.warning(
+            "sources_partially_resolved",
+            ok=len(resolved),
+            failed=len(failures),
+        )
+    log.info(
+        "sources_ready",
+        sources=[s.username or str(s.tg_id) for s in resolved],
+    )
+    return resolved
 
 
 async def run_once(
@@ -22,9 +74,7 @@ async def run_once(
     await client.start()
     total = 0
     try:
-        resolved: list[SourceRef] = []
-        for src in sources:
-            resolved.append(await client.resolve_source(src))
+        resolved = await resolve_sources(client, sources)
         for src in resolved:
             total += await recover_source(client, pipeline, src, alert=True)
         pipeline.purge_expired()
@@ -42,9 +92,7 @@ async def run_daemon(
 ) -> None:
     """Connect, recover gaps, then listen until stop_event is set."""
     await client.start()
-    resolved: list[SourceRef] = []
-    for src in sources:
-        resolved.append(await client.resolve_source(src))
+    resolved = await resolve_sources(client, sources)
 
     for src in resolved:
         await recover_source(client, pipeline, src, alert=True)

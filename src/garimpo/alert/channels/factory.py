@@ -5,7 +5,7 @@ from __future__ import annotations
 from garimpo.alert.channels.base import Channel
 from garimpo.alert.channels.console import ConsoleChannel
 from garimpo.ingest.base import MTProtoClient
-from garimpo.settings import Settings, WebhookSettings
+from garimpo.settings import BotSettings, Settings, WebhookSettings
 
 
 def build_channel(
@@ -28,9 +28,9 @@ def build_channel(
         return SavedMessagesChannel(client)
 
     if settings.alerts.channel == "bot":
-        bot = settings.alerts.bot
-        if bot is None:
-            raise ValueError("alerts.bot token_env/chat_id_env obrigatórios")
+        # Env var names have defaults, so an omitted `bot:` block is fine —
+        # same as the webhook branch below.
+        bot = settings.alerts.bot or BotSettings()
         token = settings.env(bot.token_env)
         chat_id = settings.env(bot.chat_id_env)
         if not token or not chat_id:
