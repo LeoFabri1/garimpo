@@ -1,0 +1,33 @@
+name: Bug
+description: Something behaves differently from what the docs say
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No support is promised. This may go unanswered — see
+        [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md).
+
+        **Never paste** a session string, `api_hash`, bot token, or chat id.
+        A session string is full access to the account.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. garimpo doctor --quick
+        2. garimpo backfill --telegram --days 7
+        3. ...
+    validations: { required: true }
+  - type: textarea
+    id: env
+    attributes:
+      label: Output of `garimpo doctor --quick` and `garimpo --version`
+      description: Redact channel names if you prefer. Never include secrets.
+      render: shell
+    validations: { required: true }

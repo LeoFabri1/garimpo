@@ -1,0 +1,32 @@
+name: Parser missed an offer
+description: A real offer was not parsed, or was parsed with the wrong price
+labels: [parser]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The most useful kind of report — the parser is tuned against real
+        message text.
+
+        **Strip before pasting:** affiliate links and URL shorteners
+        (`meli.la`, `amzn.to`, `s.shopee`), `@handles`, phone numbers, names.
+        `garimpo fixtures-check` enforces this on fixtures and rejects PRs
+        that carry them.
+  - type: textarea
+    id: message
+    attributes:
+      label: Message text, anonymized
+      render: text
+    validations: { required: true }
+  - type: input
+    id: expected
+    attributes:
+      label: Expected model and price
+      placeholder: rtx_5060 / 2199.00
+    validations: { required: true }
+  - type: input
+    id: got
+    attributes:
+      label: What happened instead
+      placeholder: parse_failed, or rtx_5070 at 219.00
+    validations: { required: true }
