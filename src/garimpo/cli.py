@@ -260,6 +260,93 @@ def backfill_cmd(
     typer.echo(f"inserted {n} row(s) into price_history (origin={origin})")
 
 
+daemon_app = typer.Typer(help="Roda o Garimpo em background (macOS/launchd).")
+app.add_typer(daemon_app, name="daemon")
+
+
+@daemon_app.command("start")
+def daemon_start(
+    config: Path | None = typer.Option(None, "--config", "-c"),
+) -> None:
+    """Sobe o daemon, instalando o LaunchAgent se ainda não existir."""
+    from garimpo.tools import daemon
+
+    daemon.start(config)
+    p = daemon.pid()
+    typer.echo(f"daemon no ar{f' (pid {p})' if p else ''} — logs: garimpo daemon logs -f")
+
+
+@daemon_app.command("stop")
+def daemon_stop(
+    config: Path | None = typer.Option(None, "--config", "-c"),
+) -> None:
+    """Para o daemon. Não é erro se já estiver parado."""
+    from garimpo.tools import daemon
+
+    typer.echo("daemon parado" if daemon.stop(config) else "daemon já estava parado")
+
+
+@daemon_app.command("restart")
+def daemon_restart(
+    config: Path | None = typer.Option(None, "--config", "-c"),
+) -> None:
+    """Aplica mudanças de config — o daemon lê o config só no boot."""
+    from garimpo.tools import daemon
+
+    daemon.restart(config)
+    p = daemon.pid()
+    typer.echo(f"daemon reiniciado{f' (pid {p})' if p else ''}")
+
+
+@daemon_app.command("status")
+def daemon_status(
+    config: Path | None = typer.Option(None, "--config", "-c"),
+) -> None:
+    """Está no ar? Desde quando entrou mensagem?"""
+    import sqlite3
+
+    from garimpo.settings import load_settings
+    from garimpo.tools import daemon
+
+    if not daemon.is_loaded():
+        typer.echo("daemon parado — suba com: garimpo daemon start")
+        raise typer.Exit(1)
+    typer.echo(f"daemon no ar (pid {daemon.pid()})")
+
+    # Processo vivo sem ingerir é o modo de falha silencioso; o watchdog
+    # recupera, mas quem olha merece ver o número.
+    st = load_settings(config)
+    try:
+        conn = sqlite3.connect(f"file:{st.storage.path}?mode=ro", uri=True)
+        ultima = conn.execute("SELECT MAX(received_at) FROM raw_messages").fetchone()[0]
+        conn.close()
+        typer.echo(f"última mensagem: {ultima or 'nenhuma ainda'}")
+    except Exception as exc:  # noqa: BLE001
+        typer.echo(f"banco não lido: {exc}")
+
+
+@daemon_app.command("logs")
+def daemon_logs(
+    follow: bool = typer.Option(False, "--follow", "-f", help="Acompanha ao vivo."),
+    lines: int = typer.Option(30, "--lines", "-n"),
+    config: Path | None = typer.Option(None, "--config", "-c"),
+) -> None:
+    """Mostra o log do daemon."""
+    import subprocess
+
+    from garimpo.tools import daemon
+
+    log = daemon.paths(config).log
+    if not log.is_file():
+        typer.echo(f"sem log ainda em {log}")
+        raise typer.Exit(1)
+    cmd = ["tail", *(["-f"] if follow else []), "-n", str(lines), str(log)]
+    try:
+        subprocess.run(cmd, check=False)
+    except KeyboardInterrupt:
+        pass
+
+
 @app.command("simulate")
 def simulate_cmd(
     days: int = typer.Option(90, "--days"),

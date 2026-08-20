@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  REFERÊNCIA. Prefira `garimpo daemon start`, que gera este arquivo com os
+  caminhos da máquina onde roda. Os caminhos abaixo são exemplos: substitua
+  /absolute/path/to/garimpo pelo caminho absoluto do seu clone antes de instalar.
+-->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   LaunchAgent para rodar o Garimpo local no macOS.

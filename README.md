@@ -75,7 +75,22 @@ O `backfill` é o passo que falta na maioria das tentativas. Sem ele, `run`
 começa pela mensagem **mais antiga** do canal — num grupo ativo desde 2020,
 isso é preço de placa de vídeo de cinco anos atrás, e nada parece errado.
 
-macOS: veja `deploy/com.garimpo.daemon.plist` para rodar como LaunchAgent.
+### Rodar em background
+
+```bash
+garimpo daemon start      # instala o LaunchAgent e sobe
+garimpo daemon status     # no ar? desde quando entrou mensagem?
+garimpo daemon logs -f    # acompanha
+garimpo daemon restart    # aplica mudança de config
+garimpo daemon stop
+```
+
+`start` gera o LaunchAgent com os caminhos desta máquina — não é preciso editar
+plist. `restart` é o que você quer depois de mexer no `config.yaml`, porque o
+daemon lê a configuração só no boot.
+
+macOS por enquanto (launchd). No Linux, use `garimpo.service` com systemd; o
+comando diz isso se você tentar.
 
 ## Instalação
 
