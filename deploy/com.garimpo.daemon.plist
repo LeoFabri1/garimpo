@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent para rodar o Garimpo local no macOS.
+  garimpo.service é systemd (Linux) e não serve aqui.
+
+  Instalar:
+    cp deploy/com.garimpo.daemon.plist ~/Library/LaunchAgents/
+    launchctl load -w ~/Library/LaunchAgents/com.garimpo.daemon.plist
+
+  Parar / recarregar depois de mexer no config:
+    launchctl unload ~/Library/LaunchAgents/com.garimpo.daemon.plist
+    launchctl load -w ~/Library/LaunchAgents/com.garimpo.daemon.plist
+
+  Ver se está de pé:
+    launchctl list | grep garimpo
+
+  Caminhos são absolutos de propósito: launchd não herda seu shell, não sabe
+  onde o uv está, e não roda com o cwd do projeto.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.garimpo.daemon</string>
+
+    <!-- caffeinate envelopa o daemon: com um utilitário como argumento, as
+         assertions valem "for the duration of the utility's execution", ou
+         seja, exatamente enquanto o garimpo estiver de pé. Rodar caffeinate
+         solto num terminal é inútil aqui — a assertion cai junto com o shell.
+           -i  não dormir por ociosidade
+           -m  não deixar o disco dormir (o SQLite fica ocioso entre mensagens)
+           -s  não dormir de jeito nenhum — só vale na tomada
+         Nada disto vence a tampa fechada; para isso só monitor externo ou
+         `sudo pmset -a disablesleep 1`, que não se recomenda num notebook.
+
+         Binário do venv direto, sem uv: launchd não herda seu PATH. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/caffeinate</string>
+        <string>-ims</string>
+        <string>/absolute/path/to/garimpo/.venv/bin/garimpo</string>
+        <string>run</string>
+        <string>-c</string>
+        <string>/absolute/path/to/garimpo/config/config.yaml</string>
+    </array>
+
+    <!-- storage.path e o .env são relativos ao cwd. Sem isto, o daemon
+         cria um banco vazio em outro lugar e você não entende por quê. -->
+    <key>WorkingDirectory</key>
+    <string>/absolute/path/to/garimpo</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Reinicia se cair. ThrottleInterval evita loop de 1s quando a causa
+         é permanente (username errado, sessão revogada). -->
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>/absolute/path/to/garimpo/data/garimpo.log</string>
+    <key>StandardErrorPath</key>
+    <string>/absolute/path/to/garimpo/data/garimpo.err.log</string>
+
+    <!-- Não competir com o que você está fazendo na máquina. -->
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+</dict>
+</plist>

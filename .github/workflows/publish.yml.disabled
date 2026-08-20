@@ -1,3 +1,15 @@
+# TRAVADO — não publicar.
+#
+# Renomeado para .disabled: o GitHub Actions só lê .yml/.yaml em
+# .github/workflows, então este arquivo está inerte. Nem Release publicado
+# nem workflow_dispatch conseguem dispará-lo.
+#
+# Decisão: o projeto é de uso pessoal e não será distribuído. Publicar
+# instruções de userbot expõe terceiros a perda de conta — ver
+# docs/tos-compliance.md.
+#
+# Para reativar: git mv publish.yml.disabled publish.yml
+#
 name: publish
 
 on:

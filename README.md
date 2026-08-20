@@ -7,27 +7,42 @@ statistically exceptional.
 *Garimpo* is Portuguese for prospecting: sifting through tons of gravel
 to find the nugget.
 
-**Status:** pre-alpha. The offline pipeline (parse → score → alert), Telegram
-ingest, MCP queries, webhook, CSV export and the local panel are in place;
-telemetry is opt-in and off by default.
+**Status:** pre-alpha, uso pessoal. Pipeline offline (parse → score → alert),
+ingest do Telegram, backfill, MCP, webhook, export CSV e painel local estão de
+pé; telemetria é opt-in e vem desligada. Não é serviço, não tem suporte, e o
+risco de banimento do número é seu — leia o [DISCLAIMER.md](DISCLAIMER.md).
 
 ## Aviso — leia antes de fazer login
 
 O Garimpo autentica como **conta de usuário** (userbot / MTProto), **não**
-como bot do BotFather. Ler grupos assim é **zona cinza no ToS do Telegram**.
+como bot do BotFather.
 
-**Existe risco real de restrição ou banimento do número** usado na sessão.
+Os [Content Licensing Terms](https://telegram.org/tos/content-licensing) do
+Telegram concedem licença de acesso a dados para três categorias: **Client**,
+**Bot** e **Mini App**. O Garimpo é um daemon de leitura e não se apresenta
+como nenhuma das três. O
+[API ToS §3.3](https://core.telegram.org/api/terms) pede que apps que acessam
+conteúdo de canais suportem sponsored messages, e o Garimpo não implementa
+esse suporte — um processo sem interface não tem onde exibi-las.
+
+Leia os termos e **avalie se o seu uso está coberto** antes de rodar.
+
+**Uso por sua conta e risco. Existe risco real de restrição ou banimento do
+número** usado na sessão.
 
 - Use um **número secundário** (chip/eSIM só para isso).
 - **Não** use o Telegram principal (trabalho, família, banco, 2FA).
 - O cliente **só lê** os grupos monitorados (não envia, não reage, não marca
-  como lido). Escrita, se houver, é só para você (Saved Messages / bot).
+  como lido, não lista membros). Escrita, se houver, é só para você
+  (Saved Messages / bot).
 - `garimpo login` exige digitar `secundario` para confirmar que você leu isto.
+- O enriquecimento por LLM (`llm.enabled`) é **off por default** e manda texto
+  das mensagens para um provedor externo — veja o aviso em `config.example.yaml`.
 
 Também precisa de **host 24/7** (VPS ~€4/mês ou Raspberry Pi). Notebook que
 dorme corrompe o histórico de preços. Não é SaaS zero-config.
 
-Detalhes: [docs/login.md](docs/login.md) · [SECURITY.md](SECURITY.md).
+Detalhes: [DISCLAIMER.md](DISCLAIMER.md) · [docs/login.md](docs/login.md) · [SECURITY.md](SECURITY.md).
 
 ## Quickstart (desenvolvimento)
 
@@ -49,22 +64,27 @@ uv sync --extra telethon
 cp .env.example .env          # TG_API_ID / TG_API_HASH (my.telegram.org)
 cp config/quickstart.yaml config/config.yaml
 uv run garimpo login --qr     # aviso de ban + digite: secundario
+# edite config.yaml: adicione seus canais em sources:
 uv run garimpo doctor
-uv run garimpo run --once     # ou: garimpo run
+uv run garimpo backfill --telegram --days 30   # popula o histórico, sem alertar
+uv run garimpo simulate --days 30              # veja o volume antes de ligar o alerta
+uv run garimpo run                             # daemon
 ```
 
-## Instalação via PyPI
+O `backfill` é o passo que falta na maioria das tentativas. Sem ele, `run`
+começa pela mensagem **mais antiga** do canal — num grupo ativo desde 2020,
+isso é preço de placa de vídeo de cinco anos atrás, e nada parece errado.
 
-O pacote será publicado como **`garimpo`**. Até o primeiro release, use o clone
-acima.
+macOS: veja `deploy/com.garimpo.daemon.plist` para rodar como LaunchAgent.
 
-```bash
-pip install "garimpo[telethon]"   # quando 0.1.0+ estiver no índice
-garimpo --help
-```
+## Instalação
 
-Extras: `telethon`, `pyro`, `mcp`. Configuração de build, versionamento
-e publish para maintainers: **[docs/publishing.md](docs/publishing.md)**.
+**Não publicado no PyPI**, e sem previsão. O projeto autentica como conta de
+usuário do Telegram (ver [DISCLAIMER.md](DISCLAIMER.md)); distribuir isso como
+pacote instalável facilitaria o uso por quem não leu o aviso de risco. Use o
+clone acima.
+
+Extras disponíveis no clone: `telethon`, `pyro`, `mcp`.
 
 ## Documentação
 
@@ -72,8 +92,11 @@ e publish para maintainers: **[docs/publishing.md](docs/publishing.md)**.
 |-----------|----------|
 | [docs/quickstart.md](docs/quickstart.md) | Do clone ao primeiro alerta |
 | [docs/login.md](docs/login.md) | api_id/api_hash + QR login + risco de ban |
+| [docs/tos-compliance.md](docs/tos-compliance.md) | Posição frente ao ToS e implementações pendentes |
 | [docs/hosting.md](docs/hosting.md) | VPS, Docker, heartbeat, custo |
-| [docs/publishing.md](docs/publishing.md) | PyPI: metadados, extras, build, Trusted Publishing |
+| [docs/onboarding.md](docs/onboarding.md) | Primeira execução: lacunas do CLI e scripts avulsos |
+| [docs/baseline.md](docs/baseline.md) | Viés de seleção do baseline e âncora de varejo |
+| [DISCLAIMER.md](DISCLAIMER.md) | Risco de ban, responsabilidade, uso não econômico |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup e good first issues |
 | [SECURITY.md](SECURITY.md) | Sessão, tokens, revogação |
 

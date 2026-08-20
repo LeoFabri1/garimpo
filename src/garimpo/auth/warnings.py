@@ -11,16 +11,23 @@ USERBOT_RISK_BANNER = """
 ║  O Garimpo NÃO usa bot do BotFather.                             ║
 ║  Ele autentica como CONTA DE USUÁRIO (MTProto) e lê grupos.      ║
 ║                                                                  ║
-║  Isso é zona cinza no ToS do Telegram. Existe risco real de      ║
-║  restrição ou BANIMENTO do NÚMERO usado neste login.             ║
+║  Os Content Licensing Terms do Telegram licenciam acesso a       ║
+║  dados para Client, Bot ou Mini App. O Garimpo não se            ║
+║  apresenta como nenhum dos três — avalie se o seu uso está       ║
+║  coberto antes de rodar.                                         ║
+║  telegram.org/tos/content-licensing                              ║
+║                                                                  ║
+║  Uso por sua conta e risco. Existe risco real de restrição       ║
+║  ou BANIMENTO do NÚMERO usado neste login.                       ║
 ║                                                                  ║
 ║  USE UM NÚMERO SECUNDÁRIO — nunca o Telegram principal           ║
 ║  (trabalho, família, banco, 2FA).                                ║
 ║                                                                  ║
 ║  O cliente só LÊ os grupos (não envia, não reage, não marca      ║
-║  como lido). A escrita, se houver, é só para você                ║
-║  (Saved Messages / bot próprio).                                 ║
+║  como lido, não lista membros). A escrita, se houver, é só       ║
+║  para você (Saved Messages / bot próprio).                       ║
 ║                                                                  ║
+║  Leia DISCLAIMER.md antes de continuar.                          ║
 ║  Continuando, você declara que entendeu o risco.                 ║
 ╚══════════════════════════════════════════════════════════════════╝
 """.strip()

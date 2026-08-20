@@ -1,5 +1,12 @@
 # Publicação no PyPI
 
+> **SUSPENSO (2026-08-20).** O projeto não será publicado no PyPI e o workflow
+> de release está desativado (`.github/workflows/publish.yml.disabled`).
+> Distribuir como pacote instalável facilitaria o uso por quem não leu o
+> [DISCLAIMER.md](../DISCLAIMER.md), e o Garimpo autentica como conta de
+> usuário do Telegram. Este documento fica como referência caso a decisão mude.
+
+
 Como o pacote `garimpo` é construído, versionado e publicado. Destinado a
 **maintainers**. Usuários finais: veja a seção de instalação no [README](../README.md).
 

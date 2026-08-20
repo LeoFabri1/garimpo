@@ -1,7 +1,7 @@
 alerts:
   channel: console            # dry-run / local; use saved_messages após login
   critical:
-    percentile: 0.03
+    percentile: 0.01
     silent: false
   normal:
     percentile: 0.15
@@ -10,8 +10,12 @@ alerts:
   cooldown_override_drop: 0.03
   max_per_hour: 8
 
-sources:
-  - "@promobit_hardware"
+# Grupos/canais que VOCÊ acompanha. A conta precisa conseguir ler cada um:
+# canal público resolve sozinho, grupo privado exige entrar antes.
+# Vazio de propósito: `run --dry-run` funciona offline, e o run ao vivo para
+# avisando em vez de apontar para um canal que não é seu.
+sources: []
+  # - "@seu_canal_de_promocoes"
 
 watch:
   - name: gpu-principal

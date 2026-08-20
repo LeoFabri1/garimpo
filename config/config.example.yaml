@@ -13,9 +13,13 @@ telegram:
   # app_version defaults to the installed package version; override only if needed.
   # app_version: "garimpo 0.1.0"
 
-sources:
-  - "@promobit_hardware"
-  # - id: -1001234567890
+# Grupos/canais que VOCÊ acompanha. A conta precisa conseguir ler cada um:
+# canal público resolve sozinho, grupo privado exige entrar antes. Source que
+# não resolve é logada e ignorada; se nenhuma resolver, o run aborta dizendo
+# o motivo. `parser` default é "generic" e serve para a maioria dos canais.
+sources: []
+  # - "@seu_canal_de_promocoes"
+  # - id: -1001234567890      # grupo privado: use o id numérico
   #   parser: hardmob
   #   enabled: true
 
@@ -62,7 +66,7 @@ alerts:
   # webhook:
   #   url_env: WEBHOOK_URL
   critical:
-    percentile: 0.03
+    percentile: 0.01
     silent: false
     min_store_trust: 0.9
   normal:
@@ -73,6 +77,15 @@ alerts:
   cooldown_override_drop: 0.03
   max_per_hour: 8
 
+# AVISO DE ToS — leia antes de ligar.
+# Ligar isto envia o TEXTO BRUTO das mensagens dos grupos para um provedor
+# de LLM externo. Os Content Licensing Terms do Telegram proíbem usar dados
+# da plataforma para "development, enhancement, benchmarking or deployment of
+# artificial intelligence, machine learning models".
+# https://telegram.org/tos/content-licensing
+# Deixe `false` a menos que você tenha avaliado esse risco. Um provedor local
+# (base_url apontando para llama.cpp / Ollama na sua máquina) evita a saída
+# do dado do host, mas não muda a leitura dos termos.
 llm:
   enabled: false
   provider: openai_compatible
