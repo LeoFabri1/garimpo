@@ -133,48 +133,38 @@ Acrescentar ao `stats`:
 
 ---
 
-## 6. Gap recovery só acontece no boot
+## 6. Gap recovery pós-reconexão — IMPLEMENTADO (2026-08-20)
 
-**Custo:** médio. Só dói em host que dorme — mas é perda silenciosa de dado.
+`reconnect_recovery_loop` roda ao lado do listener e refaz o recovery quando a
+conexão volta.
 
-`run_daemon` chama `recover_source` uma única vez, antes de registrar o
-handler ao vivo:
+Detecção local: `is_connected()` lê estado de socket em memória e nunca fala
+com o Telegram, então conexão saudável custa zero chamadas. É detecção de
+transição, não polling — e há teste que falha se isso regredir.
 
-```python
-for src in resolved:
-    await recover_source(client, pipeline, src, alert=True)
-client.on_new_message(resolved, _handle)
+`alert=True` de propósito, apoiado no `ALERT_MAX_AGE` de 15 minutos dentro do
+`recover_source`. Queda de dois minutos alerta normal; noite inteira offline
+entra calada. `alert=False` seria seguro e descartaria oferta legítima de
+reconexão curta.
+
+### Como verificar na prática
+
+Com o daemon rodando, desligue o Wi-Fi por uns minutos e religue. No
+`data/garimpo.log`:
+
+```
+{"event": "disconnected_waiting_reconnect", ...}
+{"event": "reconnected_recovering", "sources": 7, ...}
+{"event": "reconnected_recovered", "messages": N, ...}
 ```
 
-O Telethon reconecta sozinho (`auto_reconnect=True`), então o daemon
-*sobrevive* a uma queda de rede ou a um sleep — e volta a receber eventos a
-partir do instante da reconexão. As mensagens do intervalo **nunca são
-buscadas**. Processo suspenso e retomado não é processo reiniciado.
+Depois, `garimpo stats` mostra o funil com as mensagens do intervalo já
+contabilizadas. Se `messages` vier 0 e o canal tiver postado durante a queda,
+algo regrediu.
 
-Numa VPS 24/7 isso quase não aparece. Em notebook, aparece toda noite: fechar
-a tampa com o daemon carregado perde a madrugada inteira, enquanto parar e
-subir de manhã não perde nada, porque o boot faz o recovery. É contraintuitivo
-o bastante para o usuário nunca descobrir sozinho.
-
-### Desenho
-
-Detectar reconexão e re-rodar `recover_source` antes de voltar ao modo ao
-vivo. O Telethon expõe isso via handlers de `Connected`/`Disconnected`; a
-alternativa mais simples é um laço que compara `last_msg_id` guardado com o id
-da última mensagem do canal em intervalo fixo, e chama `recover_source` quando
-divergirem além de uma folga.
-
-Cuidado obrigatório: passar `alert=True` mas confiar no `ALERT_MAX_AGE` de 15
-minutos, senão um recovery após 8 horas dispara centenas de notificações.
-
-### Aceite
-
-- Daemon rodando, rede cortada por 30 minutos, restaurada: as mensagens do
-  intervalo aparecem em `raw_messages` sem reiniciar o processo.
-- Nenhum alerta é enviado para mensagem mais velha que `ALERT_MAX_AGE`.
-- Sem reconexão, nenhuma chamada extra ao Telegram (não pode virar polling).
-
----
+Nada disso remove o motivo de parar o daemon antes de fechar a tampa: sleep do
+macOS suspende o processo, e a recuperação só acontece quando ele acorda. O
+ganho é para queda de rede e para host que fica ligado.
 
 ## 7. Já resolvido nesta sessão
 
