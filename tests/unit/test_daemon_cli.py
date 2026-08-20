@@ -66,3 +66,57 @@ def test_log_path_follows_the_database(tmp_path: Path) -> None:
     p = daemon.paths(Path("config/quickstart.yaml"))
     assert p.log.name == "garimpo.log"
     assert p.plist.name.endswith(".plist")
+
+
+# --- Ruído de biblioteca e crescimento de log ------------------------------
+# 146 das 170 linhas do err log eram INFO do Telethon narrando handshake, e o
+# que importa — FloodWait, erro de conexão — ficava enterrado.
+
+
+def test_noisy_libraries_are_quiet_at_info() -> None:
+    import logging as _logging
+
+    from garimpo.logging import configure_logging
+
+    configure_logging(level="INFO", fmt="json")
+    assert _logging.getLogger("telethon").level == _logging.WARNING
+
+
+def test_debug_restores_library_verbosity() -> None:
+    """O nível fica no objeto logger: só pular o silenciamento não bastava."""
+    import logging as _logging
+
+    from garimpo.logging import configure_logging
+
+    configure_logging(level="INFO", fmt="json")
+    configure_logging(level="DEBUG", fmt="json")
+    assert _logging.getLogger("telethon").level == _logging.NOTSET
+    configure_logging(level="INFO", fmt="json")  # não vaza para os outros testes
+
+
+def test_rotation_only_fires_above_the_cap(tmp_path: Path, monkeypatch) -> None:
+    p = daemon.Paths(
+        plist=tmp_path / "x.plist",
+        log=tmp_path / "garimpo.log",
+        errlog=tmp_path / "garimpo.err.log",
+    )
+    monkeypatch.setattr(daemon, "paths", lambda config=None: p)
+    p.log.write_bytes(b"x" * 100)
+    p.errlog.write_bytes(b"y" * 5000)
+
+    assert daemon.rotate_logs(max_bytes=1000) == [p.errlog.with_suffix(".log.1")]
+    assert p.log.read_bytes() == b"x" * 100, "log pequeno fica intacto"
+    assert not p.errlog.exists(), "o grande foi renomeado"
+
+
+def test_rotation_keeps_only_one_previous(tmp_path: Path, monkeypatch) -> None:
+    p = daemon.Paths(
+        plist=tmp_path / "x.plist",
+        log=tmp_path / "garimpo.log",
+        errlog=tmp_path / "garimpo.err.log",
+    )
+    monkeypatch.setattr(daemon, "paths", lambda config=None: p)
+    for _ in range(3):
+        p.log.write_bytes(b"z" * 5000)
+        daemon.rotate_logs(max_bytes=1000)
+    assert not list(tmp_path.glob("*.log.2")), "não acumula gerações"

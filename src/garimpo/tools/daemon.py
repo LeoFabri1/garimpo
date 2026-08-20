@@ -160,6 +160,33 @@ def install(config: Path | None = None) -> Path:
     return p.plist
 
 
+MAX_LOG_BYTES = 20 * 1024 * 1024
+
+
+def rotate_logs(config: Path | None = None, *, max_bytes: int = MAX_LOG_BYTES) -> list[Path]:
+    """Roda no start, com o daemon parado — nunca com o log aberto.
+
+    `StandardOutPath` do launchd só acrescenta, e não rotaciona. Sete canais
+    ativos produzem na casa de centenas de KB por dia, o que vira gigabytes
+    num daemon que roda o ano inteiro.
+
+    Truncar por fora enquanto o daemon está de pé não funciona: o launchd
+    segura o descritor, o offset continua onde estava e o resultado é um
+    arquivo esparso. Por isso a rotação acontece aqui, entre o stop e o start.
+    Um daemon que nunca reinicia nunca rotaciona — limitação aceita, e o
+    motivo de o limite ser generoso.
+    """
+    girados: list[Path] = []
+    p = paths(config)
+    for log in (p.log, p.errlog):
+        if log.is_file() and log.stat().st_size > max_bytes:
+            anterior = log.with_suffix(log.suffix + ".1")
+            anterior.unlink(missing_ok=True)
+            log.rename(anterior)
+            girados.append(anterior)
+    return girados
+
+
 def stop(config: Path | None = None) -> bool:
     """Descarrega. Idempotente: já parado não é erro."""
     _require_macos()
@@ -171,6 +198,7 @@ def stop(config: Path | None = None) -> bool:
 
 def start(config: Path | None = None) -> None:
     _require_macos()
+    rotate_logs(config)
     p = paths(config)
     if not p.plist.is_file():
         install(config)
