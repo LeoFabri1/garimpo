@@ -107,17 +107,6 @@ class AlertsSettings(BaseModel):
         return self
 
 
-class LlmSettings(BaseModel):
-    enabled: bool = False
-    provider: str = "openai_compatible"
-    base_url: str = "https://api.groq.com/openai/v1"
-    model: str = "llama-3.3-70b-versatile"
-    api_key_env: str = "GROQ_API_KEY"
-    only_on_parse_failure: bool = True
-    max_attempts: int = 3
-    timeout_s: float = 20.0
-
-
 class StorageSettings(BaseModel):
     path: str = "data/garimpo.db"
     retention_raw_days: int = 30
@@ -145,7 +134,6 @@ class Settings(BaseModel):
     watch: list[WatchRuleConfig] = Field(default_factory=list)
     scoring: ScoringSettings = Field(default_factory=ScoringSettings)
     alerts: AlertsSettings = Field(default_factory=AlertsSettings)
-    llm: LlmSettings = Field(default_factory=LlmSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
     health: HealthSettings = Field(default_factory=HealthSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)

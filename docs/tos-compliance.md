@@ -43,7 +43,7 @@ Dois pontos concretos decorrem disso:
 > support for official sponsored messages in Telegram channels and may not
 > interfere with this functionality.
 
-**Cláusula de AI** — relevante para `llm.enabled`:
+**Cláusula de AI** — motivou a remoção do enricher (seção 2):
 
 > Telegram firmly prohibits the scraping, indexing, harvesting, aggregation or
 > use of data obtained from its platform to train, fine-tune, validate or
@@ -64,49 +64,36 @@ Não mexer nisto sem motivo — é o que segura o risco de banimento hoje:
   atenderia o §1.4 ("tampering with the 'read' statuses").
 - Única escrita: `send_message("me")`, Saved Messages
   (`telethon_client.py:143`, `pyro_client.py:177`).
-- `llm.enabled: false` por default.
+- Nenhum caminho de IA: o enricher por LLM foi removido do projeto.
 - Telemetria opt-in, off por default, e manda só dado derivado
   (`model_key`, `price`, `store`, `timestamp`) — nunca conteúdo de mensagem.
 - Divulgação do uso da API do Telegram no README, atendendo o §2.2.
 
 ---
 
-## 2. Guard de ToS no LLM
+## 2. Cláusula de AI — RESOLVIDA POR REMOÇÃO (2026-08-20)
 
-**Custo:** baixo. **Ganho:** consentimento informado explícito, espelhando o
-padrão que já usamos no login.
+Os Content Licensing Terms proíbem usar dado da plataforma para "development,
+enhancement, benchmarking or deployment of artificial intelligence, machine
+learning models and similar technologies".
 
-Hoje `llm.enabled: true` basta para começar a mandar texto bruto de mensagem
-para um provedor externo. O aviso está no comentário do
-`config.example.yaml`, e comentário não sobrevive a copiar/colar config.
+O projeto tinha um enricher opcional que mandava o texto bruto da mensagem
+para um LLM externo quando o parser falhava. Vinha desligado, e a defesa —
+inferência não é treino — era discutível, porque "deployment" é redação larga.
 
-### Desenho
+**O código foi removido**, não apenas desligado. Some o `enrich/` inteiro, o
+`LlmSettings`, o status `llm_pending` e o `extracted_by="llm"`. O projeto
+agora não tem caminho para violar essa cláusula: não existe modelo para
+implantar.
 
-Em `LlmSettings` (`src/garimpo/settings.py:110`), dois campos novos:
+Os números que motivaram a decisão: de 6.750 mensagens em `parse_failed`, só
+119 (1,8%) eram sequer plausivelmente oferta de GPU, e essas estavam sendo
+rejeitadas corretamente — PC montado, placa fora do catálogo, anúncio sem
+preço. O enricher processaria cafeteira e ar-condicionado, pagando por token.
 
-```yaml
-llm:
-  enabled: true
-  i_understand_tos: false   # precisa virar true junto com enabled
-  local_only: false         # se true, exige base_url em loopback
-```
-
-- Validador de modelo: se `enabled and not i_understand_tos`, erro de
-  configuração citando a cláusula e a URL. Falha no boot, não no primeiro
-  parse que der errado.
-- Se `local_only`, validar que o host de `base_url` resolve para loopback
-  (`127.0.0.1`, `::1`, `localhost`). Isso mantém o dado no host — não muda a
-  leitura dos termos, e a mensagem de erro deve dizer isso.
-- `garimpo doctor` reporta o estado: desligado / ligado-local / ligado-externo.
-
-### Aceite
-
-- Config com `enabled: true` e sem `i_understand_tos` não sobe.
-- Config com `local_only: true` e `base_url` externo não sobe.
-- Default (`enabled: false`) não pede nada e não muda comportamento.
-- Teste para cada um dos três casos.
-
----
+A tabela `enrich_queue` da migration 002 fica no schema. Migration aplicada
+não se reescreve, a tabela está vazia, e uma migration destrutiva por estética
+é risco sem ganho.
 
 ## 3. Sponsored messages (§3.3) — questão aberta
 

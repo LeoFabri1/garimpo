@@ -77,24 +77,6 @@ alerts:
   cooldown_override_drop: 0.03
   max_per_hour: 8
 
-# AVISO DE ToS — leia antes de ligar.
-# Ligar isto envia o TEXTO BRUTO das mensagens dos grupos para um provedor
-# de LLM externo. Os Content Licensing Terms do Telegram proíbem usar dados
-# da plataforma para "development, enhancement, benchmarking or deployment of
-# artificial intelligence, machine learning models".
-# https://telegram.org/tos/content-licensing
-# Deixe `false` a menos que você tenha avaliado esse risco. Um provedor local
-# (base_url apontando para llama.cpp / Ollama na sua máquina) evita a saída
-# do dado do host, mas não muda a leitura dos termos.
-llm:
-  enabled: false
-  provider: openai_compatible
-  base_url: https://api.groq.com/openai/v1
-  model: llama-3.3-70b-versatile
-  api_key_env: GROQ_API_KEY
-  only_on_parse_failure: true
-  max_attempts: 3
-  timeout_s: 20
 
 storage:
   path: data/garimpo.db

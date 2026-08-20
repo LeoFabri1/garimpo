@@ -24,8 +24,8 @@ Pontos concretos a considerar:
 - **Cláusula de AI:** os mesmos termos proíbem "scraping, indexing, harvesting,
   aggregation or use of data [...] to train, fine-tune, validate or otherwise
   engage in the development, enhancement, benchmarking or deployment of
-  artificial intelligence, machine learning models". O `llm.enabled` manda
-  texto de mensagem para um LLM externo — por isso vem desligado.
+  artificial intelligence, machine learning models". O projeto não tem
+  caminho de IA: o enricher por LLM foi removido, não apenas desligado.
 
 Use por sua conta e risco. Análise completa e o que dá para mudar no código:
 [docs/tos-compliance.md](tos-compliance.md).

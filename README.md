@@ -4,12 +4,17 @@ Deal prospecting engine for Telegram — reads the deal groups you already
 follow, learns historical prices, and alerts you only when an offer is
 statistically exceptional.
 
+**Sem IA.** O parse é regex e casamento de alias contra um catálogo curado à
+mão; a decisão de alertar é estatística — mediana ponderada, MAD e percentil
+sobre a janela de 90 dias. Nenhuma inferência, nenhum modelo, nenhuma chave de
+API. Um alerta sempre pode ser explicado pelo número que o gerou.
+
 *Garimpo* is Portuguese for prospecting: sifting through tons of gravel
 to find the nugget.
 
 **Status:** pre-alpha, uso pessoal. Pipeline offline (parse → score → alert),
 ingest do Telegram, backfill, MCP, webhook, export CSV e painel local estão de
-pé; telemetria é opt-in e vem desligada. Não é serviço, não tem suporte, e o
+pé; telemetria é opt-in e vem desligada. Sem dependência de IA. Não é serviço, não tem suporte, e o
 risco de banimento do número é seu — leia o [DISCLAIMER.md](DISCLAIMER.md).
 
 ## Aviso — leia antes de fazer login
@@ -36,8 +41,6 @@ número** usado na sessão.
   como lido, não lista membros). Escrita, se houver, é só para você
   (Saved Messages / bot).
 - `garimpo login` exige digitar `secundario` para confirmar que você leu isto.
-- O enriquecimento por LLM (`llm.enabled`) é **off por default** e manda texto
-  das mensagens para um provedor externo — veja o aviso em `config.example.yaml`.
 
 Também precisa de **host 24/7** (VPS ~€4/mês ou Raspberry Pi). Notebook que
 dorme corrompe o histórico de preços. Não é SaaS zero-config.
@@ -121,7 +124,7 @@ Extras disponíveis no clone: `telethon`, `pyro`, `mcp`.
 |--------|------------------------|
 | **v0.1** | Alerta útil sem nenhuma API key |
 | **v0.1.1** | Critical acorda, normal não; Docker + heartbeat |
-| **v0.2** | LLM só como fallback de parse; `simulate` |
+| **v0.2** | `simulate` para calibração |
 | **v0.3** | Servidor MCP + webhooks + export |
 | **v0.4** | Novas categorias; telemetria opt-in; backend pyro |
 | **v0.5** | Painel web local somente leitura |

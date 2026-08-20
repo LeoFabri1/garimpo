@@ -33,4 +33,5 @@ Alerta aparece no terminal (`console`) ou em **Mensagens Salvas** se
 
 ## Sem API key de LLM
 
-`llm.enabled: false` é o default. A v0.1 não exige Groq/OpenAI.
+Não há caminho de IA no projeto — nenhuma chave de API é necessária,
+nem opcional.

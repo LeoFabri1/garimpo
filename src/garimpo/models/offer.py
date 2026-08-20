@@ -8,7 +8,8 @@ from typing import Literal
 
 PriceMethod = Literal["pix", "boleto", "card", "unknown"]
 Condition = Literal["new", "used", "refurb"]
-ExtractedBy = Literal["regex", "llm"]
+# O parse é determinístico. Não há caminho de LLM neste projeto.
+ExtractedBy = Literal["regex"]
 
 
 @dataclass(frozen=True, slots=True)
