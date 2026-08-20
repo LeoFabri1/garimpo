@@ -43,3 +43,13 @@ class MTProtoClient(Protocol):
     async def is_authorized(self) -> bool: ...
 
     async def resolve_source(self, source: SourceRef) -> SourceRef: ...
+
+    async def msg_id_at(self, source: SourceRef, days_ago: int) -> int:
+        """Id da mensagem publicada há ~`days_ago` dias, ou 0 se não houver.
+
+        Existe para o backfill saber onde começar. Sem isto, `last_msg_id = 0`
+        e a ingestão parte do primeiro dia do canal — que num grupo de 2020 é
+        preço de placa de vídeo de cinco anos atrás, e o usuário não descobre
+        que está lendo lixo até olhar as datas no banco.
+        """
+        ...

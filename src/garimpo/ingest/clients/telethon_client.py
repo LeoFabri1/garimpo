@@ -111,6 +111,19 @@ class TelethonClient:
                 if result is not None:
                     await result
 
+    async def msg_id_at(self, source: SourceRef, days_ago: int) -> int:
+        """Primeira mensagem a partir de `days_ago` dias atrás."""
+        from datetime import timedelta
+
+        entity: Any = source.tg_id if source.tg_id is not None else source.username
+        if entity is None:
+            return 0
+        when = datetime.now(UTC) - timedelta(days=days_ago)
+        found = await self._client.get_messages(entity, limit=1, offset_date=when)
+        if not found:
+            return 0
+        return int(found[0].id)
+
     async def fetch_since(
         self, source: SourceRef, min_id: int, limit: int
     ) -> list[RawMessage]:

@@ -94,6 +94,40 @@ def login_cmd(
         raise typer.Exit(code=1) from exc
 
 
+@app.command("logout")
+def logout_cmd(
+    local_only: bool = typer.Option(
+        False,
+        "--local-only",
+        help="Só apaga o arquivo local; a sessão SEGUE ativa no Telegram.",
+    ),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Não pedir confirmação."),
+    config: Path | None = typer.Option(
+        None, "--config", "-c", help="Path to config YAML."
+    ),
+) -> None:
+    """Revoke the Telegram session server-side and remove the local file."""
+    import asyncio
+
+    from garimpo.auth.login import load_dotenv_if_present
+    from garimpo.auth.logout import run_logout
+    from garimpo.settings import load_settings
+
+    load_dotenv_if_present()
+    settings = load_settings(config)
+
+    if not yes:
+        target = "arquivo local (sessão segue ativa)" if local_only else "sessão"
+        typer.echo(f"Isto vai remover a {target}. Você precisará de novo login.")
+        if not typer.confirm("Continuar?"):
+            typer.echo("cancelado")
+            raise typer.Exit(code=1)
+
+    result = asyncio.run(run_logout(settings, local_only=local_only))
+    mark = "✓" if (result.revoked or result.file_removed) else "•"
+    typer.echo(f"{mark} {result.detail}")
+
+
 @app.command("run")
 def run_cmd(
     dry_run: bool = typer.Option(
@@ -140,7 +174,7 @@ def run_cmd(
     import asyncio
 
     from garimpo.ingest.factory import build_client
-    from garimpo.ingest.listener import run_daemon, run_once
+    from garimpo.ingest.listener import NoSourcesResolvedError, run_daemon, run_once
     from garimpo.ingest.sources import sources_from_settings
     from garimpo.pipeline import Pipeline
 
@@ -161,6 +195,9 @@ def run_cmd(
                 asyncio.run(run_daemon(client, pipeline, sources))
             except KeyboardInterrupt:
                 typer.echo("\nstopped")
+    except NoSourcesResolvedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
     finally:
         pipeline.close()
 
@@ -183,17 +220,42 @@ def stats_cmd(
 
 @app.command("backfill")
 def backfill_cmd(
-    csv_file: Path = typer.Argument(..., exists=True, dir_okay=False),
+    csv_file: Path | None = typer.Argument(None, exists=True, dir_okay=False),
+    telegram: bool = typer.Option(
+        False, "--telegram", help="Puxa o histórico recente das sources do config."
+    ),
+    days: int = typer.Option(90, "--days", help="Janela do backfill --telegram."),
     origin: str = typer.Option("backfill", "--origin"),
     config: Path | None = typer.Option(
         None, "--config", "-c", help="Path to config YAML."
     ),
 ) -> None:
-    """Import price history from CSV (model_key,price,store,observed_at)."""
+    """Popula o histórico de preço: de um CSV, ou do Telegram com --telegram.
+
+    `run --once` faz gap recovery e parte da mensagem mais antiga do canal.
+    Para começar, use `backfill --telegram --days 90`.
+    """
+    import asyncio
+
     from garimpo.settings import load_settings
-    from garimpo.tools.backfill import backfill_csv
+    from garimpo.tools.backfill import backfill_csv, backfill_telegram
 
     settings = load_settings(config)
+
+    if telegram:
+        if csv_file is not None:
+            raise typer.BadParameter("--telegram não aceita arquivo CSV junto.")
+        typer.echo(f"backfill do Telegram, últimos {days} dias:")
+        total = asyncio.run(backfill_telegram(settings, days=days, progress=typer.echo))
+        ok = sum(v for v in total.values() if v > 0)
+        falhas = [k for k, v in total.items() if v < 0]
+        typer.echo(f"\n{ok} mensagem(ns) de {len(total) - len(falhas)} fonte(s)")
+        if falhas:
+            typer.echo(f"não resolveram: {', '.join(falhas)}")
+        return
+
+    if csv_file is None:
+        raise typer.BadParameter("informe um CSV ou use --telegram.")
     n = backfill_csv(settings.storage.path, csv_file, origin=origin)
     typer.echo(f"inserted {n} row(s) into price_history (origin={origin})")
 

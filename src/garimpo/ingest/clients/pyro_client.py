@@ -160,6 +160,11 @@ class PyroClient:
         )
         self._handler_registered = True
 
+    async def msg_id_at(self, source: SourceRef, days_ago: int) -> int:
+        """Não implementado no backend pyro — o backfill cai para o início do
+        canal e avisa. Ver docs/onboarding.md."""
+        raise NotImplementedError("msg_id_at: use o backend telethon")
+
     async def fetch_since(
         self, source: SourceRef, min_id: int, limit: int
     ) -> list[RawMessage]:
