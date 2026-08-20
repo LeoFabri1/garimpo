@@ -7,6 +7,56 @@ MIT (ver [LICENSE](LICENSE)), incluindo sua isenção de garantias e limitação
 responsabilidade. O texto abaixo explicita o que aquela isenção significa neste
 projeto em particular.
 
+## O que este projeto é
+
+Um **experimento pessoal**, em estágio pre-alpha, para monitorar preço de
+hardware em canais de oferta que a própria conta já acompanha, e avisar quando
+um preço foge do histórico.
+
+Não é produto, não é serviço, **não tem suporte** e não tem compromisso de
+compatibilidade: interfaces, esquema de banco e comportamento mudam sem aviso.
+Não há canal de atendimento, e issues ou mensagens podem simplesmente não ser
+respondidas.
+
+**Não é recomendado para uso geral.** Exige host ligado, número de Telegram
+secundário e disposição para aceitar o risco descrito abaixo. Se você quer
+alerta de promoção sem nada disso, use um serviço pronto — existem vários, e
+qualquer um deles é escolha melhor.
+
+## O que este projeto não faz
+
+Declarações factuais sobre o código, verificáveis lendo o repositório:
+
+- **Não contorna proteção de segurança.** Autentica pelo fluxo oficial do
+  MTProto, com credenciais que você mesmo gera em my.telegram.org, na sua
+  conta. Não há bypass de captcha, exploração de falha, nem uso de credencial
+  alheia.
+- **Não acessa conteúdo privado.** Lê apenas canais e grupos dos quais a conta
+  configurada já é membro — o mesmo que você veria abrindo o aplicativo.
+- **Não coleta dados de pessoas.** Não usa `GetParticipants` nem qualquer outro
+  método de listagem de membros, não extrai contato, telefone ou perfil. O que
+  entra no banco é preço, modelo, loja e o texto do anúncio.
+- **Não envia nada nos grupos monitorados.** Não posta, não reage, não marca
+  como lido, não entra em grupo sozinho.
+- **Não redistribui o conteúdo lido.** O banco é local e o texto das mensagens
+  nunca sai dele. A única saída de rede opcional é a telemetria comunitária,
+  que vem **desligada**, precisa de endpoint configurado à mão, e envia apenas
+  dado derivado — modelo, preço, loja e horário. Nunca texto de mensagem,
+  nunca identificação de canal ou de pessoa.
+- **Não usa IA.** Sem modelo, sem inferência, sem chave de API — parse é regex
+  e catálogo curado à mão, decisão é estatística.
+
+## Uso lícito é responsabilidade sua
+
+O projeto se destina a acompanhar preço para decisão de compra própria. Usá-lo
+para qualquer finalidade ilícita — assédio, vigilância de pessoas, coleta de
+dados pessoais, fraude, violação de direito de terceiros — é contrário à
+finalidade para a qual foi escrito e é responsabilidade exclusiva de quem o
+fizer.
+
+Os autores não têm como saber, controlar ou impedir o uso que terceiros fazem
+do código, e não respondem por ele.
+
 ## Você é o operador
 
 O Garimpo é software que roda **na sua máquina, com a sua conta, sob o seu

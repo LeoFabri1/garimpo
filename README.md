@@ -32,8 +32,10 @@ esse suporte — um processo sem interface não tem onde exibi-las.
 
 Leia os termos e **avalie se o seu uso está coberto** antes de rodar.
 
-**Uso por sua conta e risco. Existe risco real de restrição ou banimento do
-número** usado na sessão.
+**Experimento pessoal, pre-alpha, sem suporte. Não recomendado para uso
+geral.** Existe risco real de restrição ou banimento do número usado na sessão,
+e ele é seu. Leia o [DISCLAIMER.md](DISCLAIMER.md) antes de rodar — ele lista o
+que o projeto faz, o que explicitamente **não** faz, e o que você assume.
 
 - Use um **número secundário** (chip/eSIM só para isso).
 - **Não** use o Telegram principal (trabalho, família, banco, 2FA).
