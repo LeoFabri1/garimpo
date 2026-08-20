@@ -126,6 +126,11 @@ class StorageSettings(BaseModel):
 class HealthSettings(BaseModel):
     heartbeat_url_env: str | None = None
     interval_minutes: int = 5
+    # Silêncio maior que isto em TODAS as fontes é tratado como conexão morta
+    # e dispara recuperação. Sete canais de oferta fazem ~37 mensagens/hora,
+    # então 30 min de nada já é anormal; de madrugada pode ser legítimo, e o
+    # custo de uma varredura à toa é um fetch por fonte devolvendo zero.
+    stale_ingest_minutes: int = 30
 
 
 class LoggingSettings(BaseModel):

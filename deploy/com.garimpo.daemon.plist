@@ -59,6 +59,15 @@
     <key>ThrottleInterval</key>
     <integer>30</integer>
 
+    <!-- Sem isto, Python bufferiza stdout em blocos de 8KB quando a saída é
+         arquivo, e o log fica congelado por horas: `tail -f` parece um daemon
+         morto enquanto ele está processando normalmente. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+
     <key>StandardOutPath</key>
     <string>/absolute/path/to/garimpo/data/garimpo.log</string>
     <key>StandardErrorPath</key>

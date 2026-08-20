@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 import structlog
 
@@ -97,7 +97,10 @@ async def run_daemon(
     for src in resolved:
         await recover_source(client, pipeline, src, alert=True)
 
+    clock = IngestClock()
+
     async def _handle(msg: RawMessage) -> None:
+        clock.touch()
         pipeline.process(msg)
         from garimpo.ingest.recovery import set_last_msg_id
 
@@ -109,7 +112,18 @@ async def run_daemon(
     tasks: list[asyncio.Task[None]] = [
         asyncio.create_task(_quiet_flush_loop(pipeline, stop)),
         asyncio.create_task(_retention_loop(pipeline, stop)),
-        asyncio.create_task(reconnect_recovery_loop(client, pipeline, resolved, stop)),
+        asyncio.create_task(
+            recovery_watchdog(
+                client,
+                pipeline,
+                resolved,
+                stop,
+                clock=clock,
+                stale_after=timedelta(
+                    minutes=pipeline.settings.health.stale_ingest_minutes
+                ),
+            )
+        ),
     ]
 
     if pipeline.settings.llm.enabled:
@@ -141,32 +155,62 @@ async def run_daemon(
         await client.stop()
 
 
-async def reconnect_recovery_loop(
+class IngestClock:
+    """Quando a última mensagem entrou de fato.
+
+    Compartilhado entre o handler ao vivo e o watchdog. Ler isto é comparação
+    de timestamp em memória — nunca uma chamada ao Telegram.
+    """
+
+    __slots__ = ("last",)
+
+    def __init__(self) -> None:
+        self.last = datetime.now(UTC)
+
+    def touch(self) -> None:
+        self.last = datetime.now(UTC)
+
+    def silent_for(self, now: datetime | None = None) -> timedelta:
+        return (now or datetime.now(UTC)) - self.last
+
+
+async def recovery_watchdog(
     client: MTProtoClient,
     pipeline: Pipeline,
     sources: list[SourceRef],
     stop: asyncio.Event,
     *,
     interval_s: float = 30.0,
+    clock: IngestClock | None = None,
+    stale_after: timedelta | None = None,
 ) -> None:
-    """Refaz o gap recovery quando a conexão volta.
+    """Refaz o gap recovery quando o daemon volta a si. Dois gatilhos.
 
     `run_daemon` recupera lacunas uma vez, no boot, e depois só escuta eventos
-    ao vivo. O Telethon reconecta sozinho, então o processo *sobrevive* a uma
-    queda de rede ou a um sleep do notebook — e retoma os eventos a partir do
-    instante da reconexão. As mensagens do intervalo nunca eram buscadas.
-    Processo suspenso e retomado não é processo reiniciado, e a diferença é
-    invisível: nada no log diz que houve buraco.
+    ao vivo. Processo suspenso e retomado não é processo reiniciado, e a
+    diferença é invisível: nada no log diz que houve buraco.
 
-    A detecção é local. `is_connected()` lê estado em memória, nunca fala com
-    o Telegram, então com a conexão saudável este laço não gasta uma chamada
-    sequer — é detecção de transição, não polling do servidor.
+    **Reconexão** — o Telethon reconecta sozinho depois de uma queda de rede,
+    e retoma os eventos a partir dali. `is_connected()` lê estado em memória e
+    nunca fala com o Telegram, então isto é detecção de transição, não polling.
+
+    **Ingestão parada** — o gatilho acima não basta. Quando o macOS dorme, o
+    processo é suspenso e o socket fica na tabela do kernel parecendo
+    ESTABLISHED; ao acordar, `is_connected()` continua `True` e nada indica que
+    houve buraco. Observado na prática: 54 minutos sem receber nada, com o
+    socket vivo e o processo com quase três horas de uptime. Por isso o segundo
+    gatilho olha para o *dado*: silêncio em TODAS as fontes por mais de
+    `stale_after` é tratado como conexão morta.
+
+    Também custa zero com tudo saudável — é comparação de timestamp em memória.
+    Quando dispara sem necessidade, porque os canais estavam genuinamente
+    quietos, o custo é um fetch por fonte devolvendo zero.
 
     `alert=True` de propósito: uma queda de dois minutos deve alertar
     normalmente. Quem impede a enxurrada depois de uma noite offline é o
     ALERT_MAX_AGE dentro de `recover_source`, que cala tudo com mais de 15
-    minutos. Trocar isso por `alert=False` perderia ofertas legítimas de uma
-    reconexão rápida.
+    minutos. Trocar por `alert=False` perderia oferta legítima de reconexão
+    rápida.
     """
     estava_conectado = True
     while not stop.is_set():
@@ -179,11 +223,24 @@ async def reconnect_recovery_loop(
         try:
             conectado = client.is_connected()
         except Exception as exc:  # noqa: BLE001 - nunca derrubar o daemon
-            log.debug("reconnect_probe_failed", error=str(exc))
+            log.debug("watchdog_probe_failed", error=str(exc))
             continue
 
+        motivo: str | None = None
         if conectado and not estava_conectado:
-            log.info("reconnected_recovering", sources=len(sources))
+            motivo = "reconnected"
+        elif conectado and clock is not None and stale_after is not None:
+            calado = clock.silent_for()
+            if calado > stale_after:
+                motivo = "stale_ingest"
+                log.warning(
+                    "ingest_stale", silent_minutes=round(calado.total_seconds() / 60)
+                )
+        elif estava_conectado and not conectado:
+            log.warning("disconnected_waiting_reconnect")
+
+        if motivo is not None:
+            log.info("watchdog_recovering", reason=motivo, sources=len(sources))
             recuperadas = 0
             for src in sources:
                 try:
@@ -192,10 +249,12 @@ async def reconnect_recovery_loop(
                     )
                 except Exception as exc:  # noqa: BLE001
                     label = src.username or str(src.tg_id)
-                    log.warning("reconnect_recovery_failed", source=label, error=str(exc))
-            log.info("reconnect_recovered", messages=recuperadas)
-        elif estava_conectado and not conectado:
-            log.warning("disconnected_waiting_reconnect")
+                    log.warning("watchdog_recovery_failed", source=label, error=str(exc))
+            log.info("watchdog_recovered", reason=motivo, messages=recuperadas)
+            # Sem isto, o gatilho de silêncio dispara a cada tick enquanto o
+            # canal estiver genuinamente quieto — sete chamadas a cada 30s.
+            if clock is not None:
+                clock.touch()
 
         estava_conectado = conectado
 

@@ -8,11 +8,12 @@ mensagens do intervalo nunca eram buscadas, em silêncio.
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 
 import pytest
 
 from garimpo.ingest.base import SourceRef
-from garimpo.ingest.listener import reconnect_recovery_loop
+from garimpo.ingest.listener import IngestClock, recovery_watchdog
 
 
 class _Client:
@@ -32,7 +33,7 @@ class _Pipeline:
     settings = None
 
 
-async def _drive(client, sources, *, ticks: int, recover) -> None:
+async def _drive(client, sources, *, ticks: int, recover=None, **kwargs) -> None:
     """Roda o laço por `ticks` sondagens e para."""
     stop = asyncio.Event()
 
@@ -42,8 +43,8 @@ async def _drive(client, sources, *, ticks: int, recover) -> None:
         stop.set()
 
     await asyncio.gather(
-        reconnect_recovery_loop(
-            client, _Pipeline(), sources, stop, interval_s=0.001
+        recovery_watchdog(
+            client, _Pipeline(), sources, stop, interval_s=0.001, **kwargs
         ),
         _parar(),
     )
@@ -114,3 +115,84 @@ def test_probe_failure_is_survivable(monkeypatch, sources) -> None:
     client = _Quebrado([])
     asyncio.run(_drive(client, sources, ticks=3, recover=_fake))
     assert client.sondagens >= 3
+
+
+# --- Gatilho 2: ingestão parada -------------------------------------------
+# O gatilho de socket não basta. Com o macOS dormindo, o processo é suspenso e
+# o socket fica ESTABLISHED na tabela do kernel; ao acordar, is_connected()
+# segue True. Observado: 54 min sem receber nada, socket vivo, uptime de 2h53.
+
+
+def test_stalled_ingest_triggers_recovery_even_while_connected(
+    monkeypatch, sources
+) -> None:
+    chamadas: list[str] = []
+
+    async def _fake(client, pipeline, src, *, limit=200, alert=True, now=None):
+        chamadas.append(src.username or "")
+        return 1
+
+    monkeypatch.setattr("garimpo.ingest.listener.recover_source", _fake)
+    clock = IngestClock()
+    clock.last -= timedelta(hours=1)  # uma hora sem nada entrar
+    client = _Client([True, True])
+    asyncio.run(
+        _drive(
+            client, sources, ticks=2,
+            clock=clock, stale_after=timedelta(minutes=30),
+        )
+    )
+    assert chamadas == ["a", "b"], "silêncio longo deve recuperar mesmo conectado"
+
+
+def test_recent_ingest_does_not_trigger(monkeypatch, sources) -> None:
+    chamadas: list[str] = []
+
+    async def _fake(client, pipeline, src, *, limit=200, alert=True, now=None):
+        chamadas.append(src.username or "")
+        return 0
+
+    monkeypatch.setattr("garimpo.ingest.listener.recover_source", _fake)
+    client = _Client([True, True, True])
+    asyncio.run(
+        _drive(
+            client, sources, ticks=3,
+            clock=IngestClock(), stale_after=timedelta(minutes=30),
+        )
+    )
+    assert chamadas == [], "canal ativo não deve disparar varredura"
+
+
+def test_stale_trigger_does_not_fire_every_tick(monkeypatch, sources) -> None:
+    """Sem resetar o relógio, um canal quieto viraria 7 chamadas a cada 30s."""
+    chamadas: list[str] = []
+
+    async def _fake(client, pipeline, src, *, limit=200, alert=True, now=None):
+        chamadas.append(src.username or "")
+        return 0
+
+    monkeypatch.setattr("garimpo.ingest.listener.recover_source", _fake)
+    clock = IngestClock()
+    clock.last -= timedelta(hours=1)
+    client = _Client([True, True, True, True])
+    asyncio.run(
+        _drive(
+            client, sources, ticks=4,
+            clock=clock, stale_after=timedelta(minutes=30),
+        )
+    )
+    assert len(chamadas) == len(sources), "deve recuperar uma vez, não a cada tick"
+
+
+def test_without_clock_only_the_socket_trigger_applies(monkeypatch, sources) -> None:
+    """Compatibilidade: chamado sem relógio, comporta-se como antes."""
+    chamadas: list[str] = []
+
+    async def _fake(client, pipeline, src, *, limit=200, alert=True, now=None):
+        chamadas.append(src.username or "")
+        return 0
+
+    monkeypatch.setattr("garimpo.ingest.listener.recover_source", _fake)
+    client = _Client([True, True, True])
+    asyncio.run(_drive(client, sources, ticks=3))
+    assert chamadas == []
