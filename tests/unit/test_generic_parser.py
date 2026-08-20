@@ -50,10 +50,14 @@ def test_installment_not_taken_as_cash() -> None:
     assert offer.price.amount == Decimal("5799")
 
 
-def test_absurd_price_lowers_confidence() -> None:
+def test_absurd_price_is_rejected() -> None:
+    """A price outside the catalog band is a mis-parse, not a bargain.
+
+    This used to yield an offer with confidence 0.5, which suppressed the alert
+    but still wrote the price into price_history — poisoning the baseline the
+    offer was being judged against. The band is now a gate.
+    """
     index = ModelIndex(load_gpu_catalog())
     parser = GenericParser(index)
-    # Well below 0.3 * MSRP
-    offer = parser.parse(_msg("RTX 5070 Ti Kabum R$ 400 no PIX"))
-    assert offer is not None
-    assert offer.confidence <= 0.5
+    # Well below 0.3 * MSRP and outside price_range [3000, 12000]
+    assert parser.parse(_msg("RTX 5070 Ti Kabum R$ 400 no PIX")) is None

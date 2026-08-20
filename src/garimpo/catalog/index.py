@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from rapidfuzz import fuzz, process
@@ -59,6 +60,8 @@ class ModelIndex:
         if match is None:
             return None
         alias, score, _idx = match
+        if not _digits_agree(lowered, alias):
+            return None
         key = next(k for a, k in self._pairs if a == alias)
         product = self._catalog.products[key]
         if _hits_negative(lowered, alias, product.negative_aliases):
@@ -69,6 +72,28 @@ class ModelIndex:
             matched_alias=alias,
             method="fuzzy",
         )
+
+
+_MODEL_NUMBER = re.compile(r"\d{3,4}")
+
+
+def _digits_agree(text: str, alias: str) -> bool:
+    """A fuzzy match may not invent a different model number.
+
+    GPU names are identifiers, not prose: one digit separates two products.
+    `partial_ratio` scores "geforce rtx 2060 super" against the alias
+    "rtx 5060" at 93.75 — above the cutoff, and above MIN_CONFIDENCE, so the
+    wrong price reached the baseline and fired alerts. Worse, a card missing
+    from the catalog (RX 9060 XT) got snapped onto its nearest neighbour
+    instead of being left unmatched.
+
+    So: whatever number the alias claims must actually appear in the text.
+    """
+    wanted = set(_MODEL_NUMBER.findall(alias))
+    if not wanted:
+        return True
+    found = set(_MODEL_NUMBER.findall(text))
+    return bool(wanted & found)
 
 
 def _hits_negative(text: str, matched_alias: str, negatives: tuple[str, ...]) -> bool:
@@ -94,6 +119,12 @@ def _hits_negative(text: str, matched_alias: str, negatives: tuple[str, ...]) ->
                 "notebook",
                 "laptop",
                 "desktop",
+                # Máquina montada não é peça avulsa. Um "PC Gamer Pichau com
+                # RTX 5060" a R$ 4.800 entrava no baseline da placa como se
+                # fosse a placa — e chegou a virar alerta.
+                "pc gamer",
+                "computador",
+                "all in one",
             )
         ):
             return True

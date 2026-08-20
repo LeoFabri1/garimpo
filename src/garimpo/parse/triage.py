@@ -15,6 +15,25 @@ TRIAGE = re.compile(
     re.IGNORECASE,
 )
 
+_URL = re.compile(r"https?://")
+
+
+def offer_body(text: str) -> str:
+    """Trecho da mensagem onde a oferta realmente está: tudo antes do link.
+
+    Canal de oferta escreve produto e preço, depois o link, depois um rodapé
+    fixo divulgando os outros canais do dono. O rodapé do @hardtecpromocoes,
+    por exemplo, diz "Só placa de vídeo:" — e isso casava com o TRIAGE em
+    TODA mensagem, incluindo cafeteira e ar-condicionado. Metade do que
+    chegava ao parser vinha dessa assinatura, não do produto.
+
+    Cortar no primeiro link é mais robusto que contar linhas: não depende de
+    quantas linhas em branco o canal usa, só do fato estrutural de que o link
+    vem depois do produto e antes do rodapé.
+    """
+    match = _URL.search(text)
+    return text[: match.start()] if match else text
+
 
 def passes_triage(text: str) -> bool:
-    return TRIAGE.search(text) is not None
+    return TRIAGE.search(offer_body(text)) is not None

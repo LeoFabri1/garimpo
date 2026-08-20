@@ -59,3 +59,53 @@ def test_select_price_prefers_pix_phrase() -> None:
     text = "RTX 5070 Ti de R$ 6500 no cartão / R$ 5.799 no PIX"
     price, _ = select_price(text, price_range=(3000, 12000))
     assert price == Decimal("5799")
+
+
+# --- Regressions from real @iskandarsouza traffic (2026-08) -----------------
+# Every case below was silently mis-parsed in production: 50 of 166 stored
+# offers landed outside the catalog band, all of them a tenth of the real
+# price, because `\d{1,3}` won the alternation and truncated the amount.
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("R$ 1999,00", "1999.00"),
+        ("R$ 2020", "2020"),
+        ("R$ 2089,05", "2089.05"),
+        ("R$ 2112", "2112"),
+        ("R$ 2180,68", "2180.68"),
+        ("R$ 12999,00", "12999.00"),
+        ("R$ 5799", "5799"),
+    ],
+)
+def test_four_digit_amount_without_separator(raw: str, expected: str) -> None:
+    """A bare four-digit amount must not be truncated to three digits."""
+    price, _ = select_price(f"Placa de Video RTX 5060\nValor: {raw}")
+    assert price == Decimal(expected)
+
+
+def test_pix_keyword_after_the_amount() -> None:
+    """Real messages write the amount first: 'R$ 2199,00 no pix'."""
+    text = "Placa De Video Msi Geforce Rtx 5060 Cyclone Oc\nValor : R$ 2199,00  No pix"
+    price, _ = select_price(text, price_range=(1500, 5000))
+    assert price == Decimal("2199.00")
+
+
+def test_coupon_amount_is_not_the_price() -> None:
+    """'Resgate o cupom de R$90 OFF' made a 5070 Ti cost ninety reais."""
+    text = "Placa de Vídeo MSI RTX 5070 TI 16GB\nResgate o cupom de R$90 OFF"
+    with pytest.raises(MoneyParseError):
+        select_price(text, price_range=(3000, 12000))
+
+
+def test_coupon_does_not_shadow_a_real_price() -> None:
+    text = "RTX 5060 Shadow 2X OC\nValor: R$ 2020\nCupom: F3L1Z200"
+    price, _ = select_price(text, price_range=(1500, 5000))
+    assert price == Decimal("2020")
+
+
+def test_out_of_range_is_a_gate_not_a_hint() -> None:
+    """No offer beats a wrong one — an implausible price must not be returned."""
+    with pytest.raises(MoneyParseError):
+        select_price("RTX 5090 por R$ 1727", price_range=(12000, 28000))

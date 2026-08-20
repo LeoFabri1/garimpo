@@ -5,24 +5,44 @@ from __future__ import annotations
 import re
 from decimal import Decimal, InvalidOperation
 
+# Number forms, longest-first. Alternation in `re` is ordered: a shorter branch
+# that matches wins outright, so a bare four-digit amount must not be offered a
+# three-digit branch first. `\d{1,3}` used to swallow "219" out of "2199,00" and
+# the amount silently became a tenth of the real price.
+_NUM = (
+    r"\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?"  # BR grouped: 1.234.567,89
+    r"|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?"  # US grouped: 1,234,567.89
+    r"|\d+(?:[.,]\d{1,2})?"  # bare: 5799 / 2199,00 / 899.90
+)
+
 # Prefer amounts with currency markers so model numbers (5070, 9070) are ignored.
-_AMOUNT_BRL = re.compile(
-    r"R\$\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?)",
-    re.IGNORECASE,
-)
-_AMOUNT_REAIS = re.compile(
-    r"(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?)\s*reais?\b",
-    re.IGNORECASE,
-)
+_AMOUNT_BRL = re.compile(rf"R\$\s*({_NUM})", re.IGNORECASE)
+_AMOUNT_REAIS = re.compile(rf"({_NUM})\s*reais?\b", re.IGNORECASE)
 
 _INSTALLMENT = re.compile(
     r"(\d{1,2})\s*[xX×]\s*(?:de\s+)?(?:R\$\s*)?([\d.,]+)",
     re.IGNORECASE,
 )
 
-_PRIORITY_NEAR = re.compile(
-    r"(?:por|à\s*vista|a\s*vista|no\s*pix|pix|final|agora)\s*:?\s*"
-    r"(?:R\$\s*)?([\d.,]+)",
+# "no pix: R$ 2.199" — keyword announces the amount.
+_PRIORITY_BEFORE = re.compile(
+    rf"(?:por|à\s*vista|a\s*vista|no\s*pix|pix|final|agora)\s*:?\s*"
+    rf"(?:R\$\s*)?({_NUM})",
+    re.IGNORECASE,
+)
+
+# "R$ 2.199,00 no pix" — the far more common order in real deal messages, and
+# invisible to a forward-only pattern.
+_PRIORITY_AFTER = re.compile(
+    rf"(?:R\$\s*)?({_NUM})\s*(?:no\s*pix|à\s*vista|a\s*vista|no\s*boleto)",
+    re.IGNORECASE,
+)
+
+# A coupon or discount is not the price. "Resgate o cupom de R$90 OFF" on a
+# 5070 Ti otherwise made the card cost ninety reais.
+_DISCOUNT = re.compile(
+    rf"(?:cupom|desconto)[^\n]{{0,40}}?R\$\s*({_NUM})"
+    rf"|R\$\s*({_NUM})\s*(?:de\s+)?(?:off|de\s+desconto)",
     re.IGNORECASE,
 )
 
@@ -60,7 +80,8 @@ def parse_brl(s: str) -> Decimal:
                 normalized = cleaned.replace(",", "")
         elif "," in cleaned:
             frac = cleaned.split(",")[-1]
-            if len(frac) == 2 and frac.isdigit():
+            # One or two digits is a decimal ("2199,0"); three is US thousands.
+            if len(frac) in (1, 2) and frac.isdigit():
                 normalized = cleaned.replace(",", ".")
             else:
                 normalized = cleaned.replace(",", "")
@@ -87,6 +108,20 @@ def _extract_installment_amounts(text: str) -> set[Decimal]:
     for match in _INSTALLMENT.finditer(text):
         try:
             out.add(parse_brl(match.group(2)))
+        except MoneyParseError:
+            continue
+    return out
+
+
+def _discount_amounts(text: str) -> set[Decimal]:
+    """Amounts announced as coupon/discount — never the price itself."""
+    out: set[Decimal] = set()
+    for match in _DISCOUNT.finditer(text):
+        raw = match.group(1) or match.group(2)
+        if raw is None:
+            continue
+        try:
+            out.add(parse_brl(raw))
         except MoneyParseError:
             continue
     return out
@@ -120,18 +155,19 @@ def select_price(
         price = parse_brl(de_por.group(2))
         return price, listed
 
-    installment_vals = _extract_installment_amounts(text)
+    ignore = _extract_installment_amounts(text) | _discount_amounts(text)
 
     priority: list[Decimal] = []
-    for match in _PRIORITY_NEAR.finditer(text):
-        try:
-            val = parse_brl(match.group(1))
-        except MoneyParseError:
-            continue
-        if val not in installment_vals:
-            priority.append(val)
+    for pattern in (_PRIORITY_BEFORE, _PRIORITY_AFTER):
+        for match in pattern.finditer(text):
+            try:
+                val = parse_brl(match.group(1))
+            except MoneyParseError:
+                continue
+            if val not in ignore:
+                priority.append(val)
 
-    candidates = [v for v in _currency_amounts(text) if v not in installment_vals]
+    candidates = [v for v in _currency_amounts(text) if v not in ignore]
 
     pool = priority or candidates
     if not pool:
@@ -140,7 +176,10 @@ def select_price(
     if price_range is not None:
         lo, hi = Decimal(str(price_range[0])), Decimal(str(price_range[1]))
         in_range = [p for p in pool if lo <= p <= hi]
-        if in_range:
-            return min(in_range), None
+        # A gate, not a hint. Returning an out-of-range amount stored a price
+        # that was silently a tenth of the real one; no offer beats a wrong one.
+        if not in_range:
+            raise MoneyParseError(f"nenhum preço plausível em {lo}–{hi}: {sorted(pool)}")
+        return min(in_range), None
 
     return min(pool), None

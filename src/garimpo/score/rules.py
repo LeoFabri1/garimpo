@@ -13,6 +13,10 @@ from garimpo.score.baseline import HistoryPoint, compute_baseline
 from garimpo.score.explain import explain
 from garimpo.score.perf import price_per_perf
 
+# Below this, an offer is a suspected mis-parse: it neither alerts nor is
+# recorded as a price observation. Shared so the two checks cannot drift.
+MIN_CONFIDENCE = 0.8
+
 
 @dataclass(frozen=True, slots=True)
 class WatchRule:
@@ -84,8 +88,8 @@ def score_offer(
 ) -> ScoredOffer:
     ppt = price_per_perf(offer.price.amount, product)
 
-    if offer.confidence < 0.8:
-        return _ignore(offer, rule, "confidence < 0.8", ppt, n=len(history))
+    if offer.confidence < MIN_CONFIDENCE:
+        return _ignore(offer, rule, f"confidence < {MIN_CONFIDENCE}", ppt, n=len(history))
 
     if float(offer.price.amount) > rule.max_price:
         return _ignore(offer, rule, "above max_price", ppt, n=len(history))
