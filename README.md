@@ -124,9 +124,9 @@ Extras disponíveis no clone: `telethon`, `pyro`, `mcp`.
 
 | Versão | Critério de conclusão |
 |--------|------------------------|
-| **v0.1** | Alerta útil sem nenhuma API key |
-| **v0.1.1** | Critical acorda, normal não; Docker + heartbeat |
-| **v0.2** | `simulate` para calibração |
+| **v0.1** | ✅ Alerta útil sem nenhuma API key |
+| **v0.1.1** | ✅ Critical acorda, normal não; Docker + heartbeat |
+| **v0.2** | ✅ `simulate`; backfill; daemon; watchdog; sem IA |
 | **v0.3** | Servidor MCP + webhooks + export |
 | **v0.4** | Novas categorias; telemetria opt-in; backend pyro |
 | **v0.5** | Painel web local somente leitura |
