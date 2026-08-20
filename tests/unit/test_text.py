@@ -26,10 +26,14 @@ def test_hash_normalization_stable() -> None:
 # e 45% do que chegava ao parser vinha dessa assinatura.
 
 
+# Links trocados por placeholders de propósito: republicar o encurtador do
+# canal levaria junto o código de afiliado do dono, e o t.me divulga o canal
+# dele. O que o teste precisa é da estrutura — link, depois rodapé — não das
+# URLs reais.
 _RODAPE = (
-    "\n\nLINK LINK: https://meli.la/2tGHP55\n\n"
-    "Grupos Exclusivos👍\nSó placa de vídeo:\nhttps://t.me/sohardwaredorocha\n"
-    "Memória Ram + cpu:\nhttps://t.me/placamaedorocha\n"
+    "\n\nLINK LINK: https://example.com/oferta\n\n"
+    "Grupos Exclusivos👍\nSó placa de vídeo:\nhttps://example.com/canal-a\n"
+    "Memória Ram + cpu:\nhttps://example.com/canal-b\n"
 )
 
 
@@ -44,7 +48,7 @@ def test_real_offer_still_passes_with_same_footer() -> None:
 
 
 def test_offer_body_stops_at_first_link() -> None:
-    assert offer_body("Produto\nR$ 10\nhttps://x.com/a").strip() == "Produto\nR$ 10"
+    assert offer_body("Produto\nR$ 10\nhttps://example.com/a").strip() == "Produto\nR$ 10"
 
 
 def test_offer_body_without_link_is_whole_text() -> None:
