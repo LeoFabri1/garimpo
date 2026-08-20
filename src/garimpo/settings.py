@@ -120,6 +120,10 @@ class HealthSettings(BaseModel):
     # então 30 min de nada já é anormal; de madrugada pode ser legítimo, e o
     # custo de uma varredura à toa é um fetch por fonte devolvendo zero.
     stale_ingest_minutes: int = 30
+    # Linha periódica de "estou vivo, vi isto". 81% do tráfego é triaged_out e
+    # vai para DEBUG, então em INFO o log fica parado por horas e um daemon
+    # saudável parece morto.
+    pulse_minutes: float = 15.0
 
 
 class LoggingSettings(BaseModel):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import Counter
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 
@@ -98,10 +99,12 @@ async def run_daemon(
         await recover_source(client, pipeline, src, alert=True)
 
     clock = IngestClock()
+    stats = LiveStats()
 
     async def _handle(msg: RawMessage) -> None:
         clock.touch()
-        pipeline.process(msg)
+        resultado = pipeline.process(msg)
+        stats.record(resultado.status)
         from garimpo.ingest.recovery import set_last_msg_id
 
         set_last_msg_id(pipeline.conn, msg.source_id, msg.tg_msg_id)
@@ -111,6 +114,14 @@ async def run_daemon(
     stop = stop_event or asyncio.Event()
     tasks: list[asyncio.Task[None]] = [
         asyncio.create_task(_quiet_flush_loop(pipeline, stop)),
+        asyncio.create_task(
+            activity_pulse(
+                stats,
+                clock,
+                stop,
+                interval_minutes=pipeline.settings.health.pulse_minutes,
+            )
+        ),
         asyncio.create_task(_retention_loop(pipeline, stop)),
         asyncio.create_task(
             recovery_watchdog(
@@ -252,6 +263,70 @@ async def recovery_watchdog(
                 clock.touch()
 
         estava_conectado = conectado
+
+
+class LiveStats:
+    """Contagem por status desde o último pulso.
+
+    Em memória de propósito: o pulso é para dizer que o daemon está vivo, e
+    consultar o banco a cada 15 minutos para descobrir isso seria trocar um
+    problema barato por um caro.
+    """
+
+    __slots__ = ("_contagem", "desde")
+
+    def __init__(self) -> None:
+        self._contagem: Counter[str] = Counter()
+        self.desde = datetime.now(UTC)
+
+    def record(self, status: str) -> None:
+        self._contagem[status] += 1
+
+    def drain(self) -> tuple[dict[str, int], timedelta]:
+        contagem = dict(self._contagem)
+        janela = datetime.now(UTC) - self.desde
+        self._contagem.clear()
+        self.desde = datetime.now(UTC)
+        return contagem, janela
+
+
+async def activity_pulse(
+    stats: LiveStats,
+    clock: IngestClock,
+    stop: asyncio.Event,
+    *,
+    interval_minutes: float = 15.0,
+) -> None:
+    """Uma linha periódica dizendo que o daemon está vivo e o que viu.
+
+    81% do tráfego destes canais é `triaged_out` — cadeira de escritório,
+    filamento de impressora, teclado — e o pipeline manda isso para DEBUG de
+    propósito, senão as decisões que importam ficariam enterradas. O efeito
+    colateral é que, em INFO, o log fica parado por horas e um daemon saudável
+    é indistinguível de um morto. Foi exatamente essa dúvida que motivou isto.
+
+    Loga sempre, inclusive quando não houve nada: um pulso com `total=0` é o
+    sinal de que algo está errado, e é justamente o caso em que ficar calado
+    não ajudaria ninguém.
+
+    Não fala com o Telegram nem com o banco — só lê contadores em memória.
+    """
+    while not stop.is_set():
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=interval_minutes * 60)
+            return
+        except TimeoutError:
+            pass
+
+        contagem, janela = stats.drain()
+        calado = clock.silent_for()
+        log.info(
+            "pulse",
+            window_min=round(janela.total_seconds() / 60, 1),
+            total=sum(contagem.values()),
+            silent_min=round(calado.total_seconds() / 60, 1),
+            **contagem,
+        )
 
 
 async def _quiet_flush_loop(pipeline: Pipeline, stop: asyncio.Event) -> None:
