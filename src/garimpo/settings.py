@@ -142,6 +142,23 @@ class Settings(BaseModel):
     health: HealthSettings = Field(default_factory=HealthSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
 
+    @model_validator(mode="before")
+    @classmethod
+    def _empty_section_means_default(cls, data: Any) -> Any:
+        """`health:` sem nada embaixo é YAML válido e vira None.
+
+        Comentar o conteúdo de um bloco e deixar a chave é o jeito natural de
+        desligar uma seção, e devolvia um erro de pydantic que falava em
+        "Input should be a valid dictionary" sem dizer qual seção nem que ela
+        estava vazia. Chave presente e vazia significa "use os padrões".
+
+        Vale para todas: `sources:` vazio já tem `[]` como padrão, então
+        descartar dá o mesmo resultado que tratar como lista vazia.
+        """
+        if not isinstance(data, dict):
+            return data
+        return {k: v for k, v in data.items() if v is not None}
+
     def env(self, name: str) -> str | None:
         value = os.environ.get(name)
         return value if value not in (None, "") else None
