@@ -160,6 +160,12 @@ class PyroClient:
         )
         self._handler_registered = True
 
+    def is_connected(self) -> bool:
+        # pyrogram expõe como atributo, não método; getattr evita quebrar o
+        # daemon se a forma mudar entre versões do fork.
+        estado = getattr(self._client, "is_connected", False)
+        return bool(estado() if callable(estado) else estado)
+
     async def msg_id_at(self, source: SourceRef, days_ago: int) -> int:
         """Não implementado no backend pyro — o backfill cai para o início do
         canal e avisa. Ver docs/onboarding.md."""

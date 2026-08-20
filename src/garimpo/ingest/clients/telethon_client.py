@@ -111,6 +111,9 @@ class TelethonClient:
                 if result is not None:
                     await result
 
+    def is_connected(self) -> bool:
+        return bool(self._client.is_connected())
+
     async def msg_id_at(self, source: SourceRef, days_ago: int) -> int:
         """Primeira mensagem a partir de `days_ago` dias atrás."""
         from datetime import timedelta

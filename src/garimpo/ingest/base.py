@@ -44,6 +44,15 @@ class MTProtoClient(Protocol):
 
     async def resolve_source(self, source: SourceRef) -> SourceRef: ...
 
+    def is_connected(self) -> bool:
+        """Estado local do socket. NÃO fala com o Telegram.
+
+        O laço de recuperação pós-reconexão consulta isto a cada poucos
+        segundos; se custasse uma chamada de API, viraria polling do que
+        deveria ser detecção de evento.
+        """
+        ...
+
     async def msg_id_at(self, source: SourceRef, days_ago: int) -> int:
         """Id da mensagem publicada há ~`days_ago` dias, ou 0 se não houver.
 

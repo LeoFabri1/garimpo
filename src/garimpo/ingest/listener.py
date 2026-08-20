@@ -109,6 +109,7 @@ async def run_daemon(
     tasks: list[asyncio.Task[None]] = [
         asyncio.create_task(_quiet_flush_loop(pipeline, stop)),
         asyncio.create_task(_retention_loop(pipeline, stop)),
+        asyncio.create_task(reconnect_recovery_loop(client, pipeline, resolved, stop)),
     ]
 
     if pipeline.settings.llm.enabled:
@@ -138,6 +139,65 @@ async def run_daemon(
             t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
         await client.stop()
+
+
+async def reconnect_recovery_loop(
+    client: MTProtoClient,
+    pipeline: Pipeline,
+    sources: list[SourceRef],
+    stop: asyncio.Event,
+    *,
+    interval_s: float = 30.0,
+) -> None:
+    """Refaz o gap recovery quando a conexão volta.
+
+    `run_daemon` recupera lacunas uma vez, no boot, e depois só escuta eventos
+    ao vivo. O Telethon reconecta sozinho, então o processo *sobrevive* a uma
+    queda de rede ou a um sleep do notebook — e retoma os eventos a partir do
+    instante da reconexão. As mensagens do intervalo nunca eram buscadas.
+    Processo suspenso e retomado não é processo reiniciado, e a diferença é
+    invisível: nada no log diz que houve buraco.
+
+    A detecção é local. `is_connected()` lê estado em memória, nunca fala com
+    o Telegram, então com a conexão saudável este laço não gasta uma chamada
+    sequer — é detecção de transição, não polling do servidor.
+
+    `alert=True` de propósito: uma queda de dois minutos deve alertar
+    normalmente. Quem impede a enxurrada depois de uma noite offline é o
+    ALERT_MAX_AGE dentro de `recover_source`, que cala tudo com mais de 15
+    minutos. Trocar isso por `alert=False` perderia ofertas legítimas de uma
+    reconexão rápida.
+    """
+    estava_conectado = True
+    while not stop.is_set():
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=interval_s)
+            return
+        except TimeoutError:
+            pass
+
+        try:
+            conectado = client.is_connected()
+        except Exception as exc:  # noqa: BLE001 - nunca derrubar o daemon
+            log.debug("reconnect_probe_failed", error=str(exc))
+            continue
+
+        if conectado and not estava_conectado:
+            log.info("reconnected_recovering", sources=len(sources))
+            recuperadas = 0
+            for src in sources:
+                try:
+                    recuperadas += await recover_source(
+                        client, pipeline, src, alert=True
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    label = src.username or str(src.tg_id)
+                    log.warning("reconnect_recovery_failed", source=label, error=str(exc))
+            log.info("reconnect_recovered", messages=recuperadas)
+        elif estava_conectado and not conectado:
+            log.warning("disconnected_waiting_reconnect")
+
+        estava_conectado = conectado
 
 
 async def _quiet_flush_loop(pipeline: Pipeline, stop: asyncio.Event) -> None:
