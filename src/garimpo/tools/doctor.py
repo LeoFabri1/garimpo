@@ -189,6 +189,48 @@ def _check_alert_channel(settings: Settings) -> CheckResult:
     return CheckResult(True, "canal de alerta", "webhook")
 
 
+_RESOLVE_TIMEOUT_S = 15.0
+
+
+async def _resolve_sources(client: object, settings: object) -> list[CheckResult]:
+    """Resolve cada source contra o Telegram, uma linha por fonte.
+
+    Sem isto o check de sources só conta linhas do YAML: username errado passa
+    no doctor, vira um warning no meio do `run`, e o daemon segue com menos
+    fontes do que você pediu sem que ninguém perceba.
+
+    Nunca derruba o comando. Diagnóstico que quebra por causa de rede é pior
+    que diagnóstico incompleto — por isso timeout por fonte e captura ampla.
+    """
+    import asyncio
+
+    from garimpo.ingest.sources import sources_from_settings
+
+    fontes = sources_from_settings(settings)  # type: ignore[arg-type]
+    if not fontes:
+        return []
+
+    out: list[CheckResult] = []
+    for src in fontes:
+        label = f"@{src.username}" if src.username else str(src.tg_id)
+        try:
+            resolvida = await asyncio.wait_for(
+                client.resolve_source(src),  # type: ignore[attr-defined]
+                timeout=_RESOLVE_TIMEOUT_S,
+            )
+        except TimeoutError:
+            out.append(
+                CheckResult(True, f"source {label}", "timeout ao resolver", warn=True)
+            )
+        except Exception as exc:  # noqa: BLE001 - zoo de erros por backend
+            out.append(CheckResult(False, f"source {label}", f"não resolve — {exc}"))
+        else:
+            out.append(
+                CheckResult(True, f"source {label}", f"ok (tg_id={resolvida.tg_id})")
+            )
+    return out
+
+
 def _check_session_auth(settings: object) -> list[CheckResult]:
     import asyncio
 
@@ -197,11 +239,14 @@ def _check_session_auth(settings: object) -> list[CheckResult]:
 
         client = build_client(settings)  # type: ignore[arg-type]
 
-        async def _probe() -> bool:
+        async def _probe() -> tuple[bool, list[CheckResult]]:
             try:
                 ok = await client.is_authorized()
+                # Mesma conexão: abrir um segundo cliente só para resolver
+                # sources custaria outro handshake por diagnóstico.
+                extras = await _resolve_sources(client, settings) if ok else []
                 await client.stop()
-                return bool(ok)
+                return bool(ok), extras
             except Exception:
                 try:
                     await client.stop()
@@ -209,9 +254,9 @@ def _check_session_auth(settings: object) -> list[CheckResult]:
                     pass
                 raise
 
-        authorized = asyncio.run(_probe())
+        authorized, source_checks = asyncio.run(_probe())
         if authorized:
-            return [CheckResult(True, "sessão autenticada", "ok")]
+            return [CheckResult(True, "sessão autenticada", "ok"), *source_checks]
         return [
             CheckResult(
                 False,
@@ -220,14 +265,17 @@ def _check_session_auth(settings: object) -> list[CheckResult]:
             )
         ]
     except Exception as exc:  # noqa: BLE001
-        return [
-            CheckResult(
-                True,
-                "sessão autenticada",
-                f"não verificado ({exc})",
-                warn=True,
+        # O arquivo .session é um SQLite e não aceita dois donos. Com o daemon
+        # de pé, `doctor` sempre bate nisso — e "database is locked" não diz
+        # nada a quem só quer saber se está tudo certo.
+        if "database is locked" in str(exc).lower():
+            detalhe = (
+                "o daemon está usando a sessão — pare-o para verificar, "
+                "ou rode `garimpo doctor --quick`"
             )
-        ]
+        else:
+            detalhe = f"não verificado ({exc})"
+        return [CheckResult(True, "sessão autenticada", detalhe, warn=True)]
 
 
 def format_results(results: list[CheckResult]) -> str:

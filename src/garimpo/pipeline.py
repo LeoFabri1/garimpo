@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import hashlib
+import sqlite3
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -306,14 +307,75 @@ def process_texts(
     return results
 
 
+def _baseline_readiness(
+    conn: sqlite3.Connection, settings: Settings
+) -> dict[str, Any]:
+    """Os modelos vigiados já têm amostra para o score valer?
+
+    Abaixo de `scoring.min_samples`, score/rules.py cai num atalho que é só
+    filtro de preço máximo: o usuário recebe alertas e acredita que são
+    estatísticos. Sem isto aqui, essa diferença é invisível.
+    """
+    from garimpo.catalog import ModelIndex, load_catalog_for_watch
+
+    categorias = sorted({r.category for r in settings.watch if getattr(r, "category", None)})
+    index = ModelIndex(load_catalog_for_watch(categorias))
+    vigiados: set[str] = set()
+    for rule in watch_rules_from_settings(settings, index):
+        if rule.models:
+            vigiados |= set(rule.models)
+
+    cutoff = (
+        datetime.now(UTC).replace(tzinfo=None)
+        - timedelta(days=settings.scoring.window_days)
+    ).isoformat()
+    contagem = {
+        str(r["model_key"]): int(r["n"])
+        for r in conn.execute(
+            """
+            SELECT model_key, COUNT(*) AS n FROM price_history
+            WHERE excluded = 0 AND observed_at >= ?
+            GROUP BY model_key
+            """,
+            (cutoff,),
+        )
+    }
+
+    minimo = settings.scoring.min_samples
+    por_modelo = {m: contagem.get(m, 0) for m in sorted(vigiados)}
+    sem_baseline = sorted(m for m, n in por_modelo.items() if n < minimo)
+    return {
+        "min_samples": minimo,
+        "window_days": settings.scoring.window_days,
+        "watched": por_modelo,
+        "with_baseline": sorted(m for m, n in por_modelo.items() if n >= minimo),
+        "without_baseline": sem_baseline,
+        "warning": (
+            f"{len(sem_baseline)} modelo(s) vigiado(s) abaixo de min_samples="
+            f"{minimo}: alertas deles NÃO são estatísticos, saem do filtro de "
+            "preço máximo"
+        )
+        if sem_baseline
+        else None,
+    }
+
+
 def stats_snapshot(settings: Settings) -> dict[str, Any]:
     conn = connect(settings.storage.path)
     try:
+        por_status = messages_repo.count_by_status(conn)
+        parsed = por_status.get("parsed", 0)
+        falhou = por_status.get("parse_failed", 0)
+        tentadas = parsed + falhou
         return {
             "user_version": conn.execute("PRAGMA user_version").fetchone()[0],
-            "raw_by_status": messages_repo.count_by_status(conn),
+            "raw_by_status": por_status,
+            # Quanto do que chegou ao parser ele entendeu. Cai quando o canal
+            # muda de formato ou quando o catálogo não cobre o que ele posta.
+            "parse_rate": round(parsed / tentadas, 3) if tentadas else None,
             "price_history": history_repo.count_history(conn),
             "alerts_by_level": alerts_repo.count_alerts(conn),
+            "baseline": _baseline_readiness(conn, settings),
         }
     finally:
         conn.close()
