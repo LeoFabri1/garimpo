@@ -8,9 +8,10 @@ from decimal import Decimal
 from garimpo.catalog.index import ModelIndex
 from garimpo.models.offer import Offer, Price
 from garimpo.models.raw import RawMessage
+from garimpo.parse.enrich import enrich_offer
 from garimpo.parse.money import MoneyParseError, select_price
 from garimpo.parse.text import normalize_text
-from garimpo.parse.triage import passes_triage
+from garimpo.parse.triage import offer_body, passes_triage
 
 _BRANDS = (
     "asus",
@@ -49,6 +50,21 @@ _STORES = (
     ("marketplace_generico", re.compile(r"\b(mercado\s*livre|shopee)\b", re.I)),
 )
 
+# Host in the product URL beats free-text shop names in commentary.
+_STORE_HOSTS = (
+    ("kabum", re.compile(r"kabum\.com\.br", re.I)),
+    ("terabyte", re.compile(r"terabyteshop\.com\.br", re.I)),
+    ("pichau", re.compile(r"pichau\.com\.br", re.I)),
+    ("amazon", re.compile(r"amazon\.com\.br|\bamzn\.to\b", re.I)),
+    ("magalu", re.compile(r"magazineluiza\.com\.br|magazinevoce\.com\.br", re.I)),
+    ("americanas", re.compile(r"americanas\.com\.br", re.I)),
+    ("aliexpress", re.compile(r"aliexpress\.com", re.I)),
+    (
+        "marketplace_generico",
+        re.compile(r"mercadolivre\.com\.br|\bmeli\.la\b|shopee\.com\.br", re.I),
+    ),
+)
+
 _PIX = re.compile(r"\b(pix|à\s*vista|a\s*vista)\b", re.I)
 
 
@@ -67,8 +83,12 @@ class GenericParser:
         if not passes_triage(msg.text):
             return None
 
-        cleaned = normalize_text(msg.text)
-        resolved = self._index.resolve(cleaned)
+        # Resolve against the product block only (everything before the first
+        # URL). Channel footers compare against other SKUs ("28% cheaper than
+        # the 9070 XT") and name other shops ("like the terabyte one above");
+        # matching the full message used to steal the model and the store.
+        body = normalize_text(offer_body(msg.text))
+        resolved = self._index.resolve(body)
         if resolved is None:
             return None
 
@@ -76,7 +96,7 @@ class GenericParser:
         assert product is not None
 
         try:
-            amount, listed = select_price(cleaned, price_range=product.price_range)
+            amount, listed = select_price(body, price_range=product.price_range)
         except MoneyParseError:
             return None
 
@@ -90,11 +110,11 @@ class GenericParser:
             if float(amount) < lo * 0.5 or float(amount) > hi * 1.2:
                 confidence = min(confidence, 0.5)
 
-        brand = _find_brand(cleaned)
-        store = _find_store(cleaned)
-        method = "pix" if _PIX.search(cleaned) else "unknown"
+        brand = _find_brand(body)
+        store = _find_store(body) or _find_store_host(msg.text)
+        method = "pix" if _PIX.search(body) else "unknown"
 
-        return Offer(
+        offer = Offer(
             model_key=resolved.model_key,
             price=Price(
                 amount=amount,
@@ -106,6 +126,9 @@ class GenericParser:
             extracted_by="regex",
             confidence=confidence,
         )
+        # Coupon often sits in the product block; the purchase URL is the first
+        # link (the same boundary offer_body uses). Read both from the raw text.
+        return enrich_offer(offer, msg.text)
 
 
 def _find_brand(text: str) -> str | None:
@@ -118,6 +141,13 @@ def _find_brand(text: str) -> str | None:
 
 def _find_store(text: str) -> str | None:
     for key, pattern in _STORES:
+        if pattern.search(text):
+            return key
+    return None
+
+
+def _find_store_host(text: str) -> str | None:
+    for key, pattern in _STORE_HOSTS:
         if pattern.search(text):
             return key
     return None

@@ -24,8 +24,6 @@ def format_alert(scored: ScoredOffer) -> str:
         lines.append(" · ".join(meta_bits))
     lines.append("")
     lines.append(scored.reason)
-    if scored.price_per_pt is not None:
-        lines.append(f"⚡ R$ {scored.price_per_pt:.1f} por ponto de performance")
     if offer.url:
         lines.append("")
         lines.append(f"🔗 {offer.url}")

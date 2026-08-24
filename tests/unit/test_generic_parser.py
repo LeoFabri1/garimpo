@@ -61,3 +61,78 @@ def test_absurd_price_is_rejected() -> None:
     parser = GenericParser(index)
     # Well below 0.3 * MSRP and outside price_range [3000, 12000]
     assert parser.parse(_msg("RTX 5070 Ti Kabum R$ 400 no PIX")) is None
+
+
+# --- Regressão: rodapé comparando SKUs (2026-08) -----------------------------
+# Mensagem real de alerta citava "28% a menos que a 9070 XT" e "a 9070 da
+# terabyte acima" depois do link. O resolve lia o rodapé, o negative da 9070
+# bare rejeitava o produto certo (porque o texto mencionava XT), e o alias
+# "9070 xt" casava no comentário — alerta falso de XT a preço de GRE.
+
+
+_GRE_WITH_XT_FOOTER = """\
+🆘 #Pichau - Placa de Video PowerColor Radeon RX 9070 GRE Reaper, 12GB
+GDDR6, 192-bit, RX9070GRE-12G-A
+Produto
+
+🤑 Valor: R$ 3.699,99
+➡️ Link https://www.pichau.com.br/placa-de-video-powercolor-radeon-rx-9070-gre-reaper
+
+Cerca de 15% a menos que a 9070 normal. 28 % A menos que a 9070 XT.
+Uma boa opção no caos assim como essa 9070 da terabyte acima
+"""
+
+
+def test_footer_sku_comparison_does_not_steal_model() -> None:
+    index = ModelIndex(load_gpu_catalog())
+    parser = GenericParser(index)
+    # GRE is not in the catalog; the correct outcome is no offer — not XT.
+    assert parser.parse(_msg(_GRE_WITH_XT_FOOTER)) is None
+
+
+def test_real_xt_still_parses_with_store_in_body() -> None:
+    index = ModelIndex(load_gpu_catalog())
+    parser = GenericParser(index)
+    offer = parser.parse(
+        _msg(
+            "Placa de Vídeo ASUS TUF Radeon RX 9070 XT 16GB — R$ 4.299 no PIX "
+            "na Terabyte\nhttps://www.terabyteshop.com.br/produto/9070xt"
+        )
+    )
+    assert offer is not None
+    assert offer.model_key == "rx_9070_xt"
+    assert offer.store == "terabyte"
+    assert offer.price.amount == Decimal("4299")
+
+
+def test_store_from_product_url_when_body_omits_shop() -> None:
+    index = ModelIndex(load_gpu_catalog())
+    parser = GenericParser(index)
+    offer = parser.parse(
+        _msg(
+            "ASUS TUF Radeon RX 9070 XT 16GB R$ 4299 PIX\n"
+            "https://www.pichau.com.br/placa-rx-9070-xt"
+        )
+    )
+    assert offer is not None
+    assert offer.store == "pichau"
+
+
+def test_alert_payload_includes_coupon_and_purchase_url() -> None:
+    index = ModelIndex(load_gpu_catalog())
+    parser = GenericParser(index)
+    offer = parser.parse(
+        _msg(
+            "🔥 RTX 5060 TI 8GB Zotac Gaming\n"
+            "💰 R$ 2.374 PIX\n"
+            "📝 Cupom: MAISECONOMIA\n"
+            "⬇️\n"
+            "https://example.com/oferta\n"
+            "rodapé com 9070 XT e terabyte não deve importar"
+        )
+    )
+    assert offer is not None
+    assert offer.model_key == "rtx_5060_ti"
+    assert offer.coupon is not None
+    assert offer.coupon.code == "MAISECONOMIA"
+    assert offer.url == "https://example.com/oferta"

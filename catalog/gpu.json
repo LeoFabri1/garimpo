@@ -404,6 +404,8 @@
         "radeon 9070 xt"
       ],
       "negative_aliases": [
+        "9070 gre",
+        "9070gre",
         "notebook",
         "laptop",
         "pc gamer",
@@ -429,6 +431,8 @@
       "negative_aliases": [
         "9070 xt",
         "9070xt",
+        "9070 gre",
+        "9070gre",
         "notebook",
         "laptop",
         "pc gamer",

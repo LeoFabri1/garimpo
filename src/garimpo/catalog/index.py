@@ -114,6 +114,8 @@ def _hits_negative(text: str, matched_alias: str, negatives: tuple[str, ...]) ->
                 "ti",
                 " xt",
                 "xt",
+                " gre",
+                "gre",
                 " super",
                 "super",
                 "notebook",

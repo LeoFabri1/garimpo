@@ -127,3 +127,16 @@ def test_real_cards_still_resolve(text: str, expected: str) -> None:
     result = ModelIndex(load_gpu_catalog()).resolve(text.lower())
     assert result is not None
     assert result.model_key == expected
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Placa de Video PowerColor Radeon RX 9070 GRE Reaper, 12GB, GDDR6",
+        "PowerColor RX9070GRE-12G-A Reaper 12GB",
+        "Radeon RX 9070 GRE 12GB GDDR6",
+    ],
+)
+def test_9070_gre_is_not_9070_or_xt(text: str) -> None:
+    """GRE is a different SKU (12GB); snapping it onto 9070/XT poisons both."""
+    assert ModelIndex(load_gpu_catalog()).resolve(text.lower()) is None
