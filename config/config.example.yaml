@@ -49,6 +49,13 @@ watch:
   #   models: ["Ryzen 7 7800X3D", "Ryzen 7 9800X3D"]
   #   max_price: 2800
 
+  # RAM: kits exatos em catalog/categories/ram.json. Só com esta categoria
+  # no watch a triagem deixa passar mensagens de memória.
+  # - name: ram-32
+  #   category: ram
+  #   models: ["Kingston Fury Beast 32GB DDR5 5600"]
+  #   max_price: 3000
+
 scoring:
   window_days: 90
   half_life_days: 21

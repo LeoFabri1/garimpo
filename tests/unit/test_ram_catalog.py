@@ -36,7 +36,8 @@ def _parse(text: str):  # type: ignore[no-untyped-def]
 )
 def test_the_kit_is_recognised(title: str) -> None:
     text = f"🔥 {title}\n\n💰 R$ 1.399 no PIX\n\nhttps://loja.example.com/produto"
-    assert passes_triage(text)
+    assert passes_triage(text, {"ram"})
+    assert not passes_triage(text)
     offer = _parse(text)
     assert offer is not None
     assert offer.model_key == KEY

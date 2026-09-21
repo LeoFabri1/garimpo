@@ -96,6 +96,7 @@ class Pipeline:
                 force_console=dry_run or settings.alerts.channel == "console",
             )
         categories = sorted({r.category for r in settings.watch if getattr(r, "category", None)})
+        self.categories = frozenset(categories)
         self.catalog = load_catalog_for_watch(categories)
         self.index = ModelIndex(self.catalog)
         self.parsers = ParserRegistry(self.index)
@@ -178,7 +179,7 @@ class Pipeline:
             status="received",
         )
 
-        if not text or not passes_triage(text):
+        if not text or not passes_triage(text, self.categories):
             messages_repo.update_raw_status(self.conn, raw_id, status="triaged_out")
             return PipelineResult(status="triaged_out", raw_id=raw_id)
 

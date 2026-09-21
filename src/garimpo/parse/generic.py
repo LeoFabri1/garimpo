@@ -11,7 +11,7 @@ from garimpo.models.raw import RawMessage
 from garimpo.parse.enrich import enrich_offer, extract_purchase_url
 from garimpo.parse.money import MoneyParseError, select_price
 from garimpo.parse.text import normalize_text
-from garimpo.parse.triage import offer_body, passes_triage
+from garimpo.parse.triage import CATEGORY_TRIAGE, offer_body, passes_triage
 
 _BRANDS = (
     "asus",
@@ -83,7 +83,9 @@ class GenericParser:
     def parse(self, msg: RawMessage) -> Offer | None:
         if not msg.text:
             return None
-        if not passes_triage(msg.text):
+        # All categories here: the pipeline already gated on the watched ones,
+        # and the catalog only holds products of those categories anyway.
+        if not passes_triage(msg.text, CATEGORY_TRIAGE):
             return None
 
         # Resolve against the product block only (everything before the first
