@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import re
 
-# Keep broad enough for configured categories (gpu / notebook / cpu).
+# Keep broad enough for configured categories (gpu / notebook / cpu / ram).
 TRIAGE = re.compile(
     r"("
     r"rtx|gtx|radeon|geforce|arc\s?[ab]\d|rx\s?\d{3,4}|"
     r"placa\s+de\s+v[íi]deo|gpu|"
     r"notebook|laptop|ultrabook|"
-    r"ryzen|threadripper|core\s*i[3579]|intel\s*i[3579]|\bi[3579]-\d"
+    r"ryzen|threadripper|core\s*i[3579]|intel\s*i[3579]|\bi[3579]-\d|"
+    r"ddr[45]|mem[oó]ria\s+ram|fury\s+beast"
     r")",
     re.IGNORECASE,
 )

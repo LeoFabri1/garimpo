@@ -1,0 +1,117 @@
+{
+  "$schema": "../gpu.schema.json",
+  "meta": {
+    "perf_basis": "sem ranking de desempenho: um item por kit exato, perf fixo em 100",
+    "perf_reference": "kits Kingston Fury Beast DDR5 5600 CL36 = 100",
+    "updated_at": "2026-09-21",
+    "category": "ram"
+  },
+  "products": {
+    "kingston_fury_beast_ddr5_16gb_5600": {
+      "display": "Kingston Fury Beast 16GB DDR5 5600 CL36",
+      "vendor": "kingston",
+      "perf": 100,
+      "price_range": [
+        600,
+        4000
+      ],
+      "aliases": [
+        "kf556c36bbe-16",
+        "kf556c36bb-16",
+        "fury beast, 16gb, 5600",
+        "fury beast 16gb ddr5 5600",
+        "fury beast ddr5 16gb 5600",
+        "fury beast, 16gb, ddr5, 5600",
+        "fury beast ddr5, 16gb, 5600",
+        "fury beast 16gb 5600"
+      ],
+      "negative_aliases": [
+        "rgb",
+        "kf556c36bbea",
+        "cl40",
+        "c40",
+        "2x16",
+        "2x8",
+        "32gb",
+        "8gb",
+        "sodimm",
+        "notebook",
+        "laptop",
+        "impact",
+        "ddr4",
+        "2x32",
+        "64gb",
+        "k2-"
+      ]
+    },
+    "kingston_fury_beast_ddr5_32gb_5600": {
+      "display": "Kingston Fury Beast 32GB DDR5 5600 CL36",
+      "vendor": "kingston",
+      "perf": 100,
+      "price_range": [
+        1000,
+        8000
+      ],
+      "aliases": [
+        "kf556c36bbe-32",
+        "kf556c36bb-32",
+        "fury beast, 32gb, 5600",
+        "fury beast 32gb ddr5 5600",
+        "fury beast ddr5 32gb 5600",
+        "fury beast, 32gb, ddr5, 5600",
+        "fury beast ddr5, 32gb, 5600",
+        "fury beast 32gb 5600"
+      ],
+      "negative_aliases": [
+        "kf556c36bbea",
+        "2x16",
+        "2x32",
+        "64gb",
+        "k2-",
+        "rgb",
+        "cl40",
+        "c40",
+        "sodimm",
+        "notebook",
+        "laptop",
+        "impact",
+        "ddr4"
+      ]
+    },
+    "kingston_fury_beast_ddr5_64gb_2x32_5600": {
+      "display": "Kingston Fury Beast 64GB (2x32GB) DDR5 5600 CL36",
+      "vendor": "kingston",
+      "perf": 100,
+      "price_range": [
+        2000,
+        16000
+      ],
+      "aliases": [
+        "kf556c36bbek2-64",
+        "kf556c36bbk2-64",
+        "fury beast, 64gb (2x32gb), 5600",
+        "fury beast 64gb (2x32gb) ddr5 5600",
+        "fury beast 64gb (2x32gb) 5600",
+        "fury beast 2x32gb ddr5 5600",
+        "fury beast 2x32gb 5600",
+        "fury beast, 64gb, 5600",
+        "fury beast 64gb ddr5 5600",
+        "fury beast ddr5 64gb 5600"
+      ],
+      "negative_aliases": [
+        "kf556c36bbeak2",
+        "4x32",
+        "4x16",
+        "128gb",
+        "rgb",
+        "cl40",
+        "c40",
+        "sodimm",
+        "notebook",
+        "laptop",
+        "impact",
+        "ddr4"
+      ]
+    }
+  }
+}
