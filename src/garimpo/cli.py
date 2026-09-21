@@ -369,17 +369,31 @@ def simulate_cmd(
 def reparse_cmd(
     status: str = typer.Option("parse_failed", "--status"),
     since: int = typer.Option(30, "--since", help="Days lookback"),
+    apply: bool = typer.Option(
+        False, "--apply", help="Write offers and price history (backs up the DB first)."
+    ),
     config: Path | None = typer.Option(
         None, "--config", "-c", help="Path to config YAML."
     ),
 ) -> None:
-    """Re-run parsers on stored raw messages."""
+    """Re-run parsers on stored raw messages. Never sends alerts."""
+    from garimpo.auth.login import load_dotenv_if_present
     from garimpo.settings import load_settings
     from garimpo.tools.reparse import reparse
 
+    load_dotenv_if_present()
     settings = load_settings(config)
-    n = reparse(settings, status=status, since_days=since, dry_run=True)
-    typer.echo(f"reparse: {n} message(s) newly parsed")
+    report = reparse(settings, status=status, since_days=since, dry_run=not apply)
+    for raw_id, offer in report.parsed:
+        store = offer.store or "?"
+        typer.echo(f"  raw {raw_id}: {offer.model_key} R$ {offer.price.amount} ({store})")
+    if report.backup is not None:
+        typer.echo(f"backup: {report.backup}")
+    verb = "gravada(s)" if apply else "seriam gravada(s) — rode com --apply"
+    typer.echo(
+        f"reparse: {report.scanned} lida(s), {len(report.parsed)} oferta(s) {verb}"
+        + (f", {report.duplicates} duplicada(s)" if apply else "")
+    )
 
 
 @app.command("export")
