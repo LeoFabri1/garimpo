@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from garimpo.catalog import ModelIndex, load_gpu_catalog
+from garimpo.catalog import ModelIndex, load_catalog_for_watch, load_gpu_catalog
 from garimpo.settings import Settings, find_config_path, load_settings
 from garimpo.store.db import connect, user_version
 
@@ -72,13 +72,18 @@ def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[Check
         results.append(CheckResult(False, "catálogo GPU", str(exc)))
         return results
 
+    # Watch models live in their category's catalog (ram.json, cpu.json…);
+    # checking them against GPU alone reported every non-GPU model missing.
+    categories = sorted({r.category for r in settings.watch if r.category})
+    watch_catalog = load_catalog_for_watch(categories)
+    index = ModelIndex(watch_catalog)
     missing: list[str] = []
     for rule in settings.watch:
         if not rule.models:
             continue
         for name in rule.models:
             hit = index.resolve(name)
-            if hit is None and name not in catalog.products:
+            if hit is None and name not in watch_catalog.products:
                 missing.append(name)
     if missing:
         results.append(
