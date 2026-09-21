@@ -20,7 +20,7 @@ TRIAGE = re.compile(
 # in these channels; for a GPU-only user they would all become parse_failed
 # rows — logged at INFO, never purged, dragging parse_rate down.
 CATEGORY_TRIAGE: dict[str, re.Pattern[str]] = {
-    "ram": re.compile(r"ddr[45]|mem[oó]ria\s+ram|fury\s+beast", re.IGNORECASE),
+    "ram": re.compile(r"ddr[45]|mem[oó]ria|fury\s+beast|\dx\s?\d{2}\s?gb", re.IGNORECASE),
 }
 
 _URL = re.compile(r"https?://")

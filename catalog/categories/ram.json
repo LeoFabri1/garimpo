@@ -1,8 +1,8 @@
 {
   "$schema": "../gpu.schema.json",
   "meta": {
-    "perf_basis": "sem ranking de desempenho: um item por kit exato, perf fixo em 100",
-    "perf_reference": "kits Kingston Fury Beast DDR5 5600 CL36 = 100",
+    "perf_basis": "sem ranking de desempenho: um item por kit, perf fixo em 100",
+    "perf_reference": "todos = 100",
     "updated_at": "2026-09-21",
     "category": "ram"
   },
@@ -41,7 +41,14 @@
         "ddr4",
         "2x32",
         "64gb",
-        "k2-"
+        "k2-",
+        "pc gamer",
+        "computador",
+        "workstation",
+        "mini pc",
+        "geforce",
+        "radeon",
+        "rtx "
       ]
     },
     "kingston_fury_beast_ddr5_32gb_5600": {
@@ -75,42 +82,57 @@
         "notebook",
         "laptop",
         "impact",
-        "ddr4"
+        "ddr4",
+        "pc gamer",
+        "computador",
+        "workstation",
+        "mini pc",
+        "geforce",
+        "radeon",
+        "rtx "
       ]
     },
-    "kingston_fury_beast_ddr5_64gb_2x32_5600": {
-      "display": "Kingston Fury Beast 64GB (2x32GB) DDR5 5600 CL36",
-      "vendor": "kingston",
+    "ddr5_64gb_2x32_kit": {
+      "display": "Kit DDR5 64GB (2x32GB) desktop, qualquer marca/velocidade",
+      "vendor": "any",
       "perf": 100,
       "price_range": [
-        2000,
-        16000
+        800,
+        20000
       ],
       "aliases": [
+        "(2x32gb)",
+        "2x32gb",
+        "2x 32gb",
+        "2 x 32gb",
+        "2x32 gb",
+        "2 x 32 gb",
         "kf556c36bbek2-64",
-        "kf556c36bbk2-64",
-        "fury beast, 64gb (2x32gb), 5600",
-        "fury beast 64gb (2x32gb) ddr5 5600",
-        "fury beast 64gb (2x32gb) 5600",
-        "fury beast 2x32gb ddr5 5600",
-        "fury beast 2x32gb 5600",
-        "fury beast, 64gb, 5600",
-        "fury beast 64gb ddr5 5600",
-        "fury beast ddr5 64gb 5600"
+        "kf556c36bbk2-64"
       ],
       "negative_aliases": [
-        "kf556c36bbeak2",
-        "4x32",
-        "4x16",
-        "128gb",
-        "rgb",
-        "cl40",
-        "c40",
+        "ddr4",
+        "ddr3",
         "sodimm",
+        "so-dimm",
         "notebook",
         "laptop",
         "impact",
-        "ddr4"
+        "rdimm",
+        "registrada",
+        "registered",
+        "servidor",
+        "server",
+        "4x32",
+        "4x16",
+        "128gb",
+        "pc gamer",
+        "computador",
+        "workstation",
+        "mini pc",
+        "geforce",
+        "radeon",
+        "rtx "
       ]
     }
   }
