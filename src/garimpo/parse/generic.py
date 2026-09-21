@@ -8,7 +8,7 @@ from decimal import Decimal
 from garimpo.catalog.index import ModelIndex
 from garimpo.models.offer import Offer, Price
 from garimpo.models.raw import RawMessage
-from garimpo.parse.enrich import enrich_offer
+from garimpo.parse.enrich import enrich_offer, extract_purchase_url
 from garimpo.parse.money import MoneyParseError, select_price
 from garimpo.parse.text import normalize_text
 from garimpo.parse.triage import offer_body, passes_triage
@@ -55,8 +55,11 @@ _STORE_HOSTS = (
     ("kabum", re.compile(r"kabum\.com\.br", re.I)),
     ("terabyte", re.compile(r"terabyteshop\.com\.br", re.I)),
     ("pichau", re.compile(r"pichau\.com\.br", re.I)),
-    ("amazon", re.compile(r"amazon\.com\.br|\bamzn\.to\b", re.I)),
-    ("magalu", re.compile(r"magazineluiza\.com\.br|magazinevoce\.com\.br", re.I)),
+    ("amazon", re.compile(r"amazon\.com\.br|\bamzn\.to\b|\blink\.amazon\b", re.I)),
+    (
+        "magalu",
+        re.compile(r"magazineluiza\.com\.br|magazinevoce\.com\.br|divulgadormagalu\.com", re.I),
+    ),
     ("americanas", re.compile(r"americanas\.com\.br", re.I)),
     ("aliexpress", re.compile(r"aliexpress\.com", re.I)),
     (
@@ -111,7 +114,13 @@ class GenericParser:
                 confidence = min(confidence, 0.5)
 
         brand = _find_brand(body)
-        store = _find_store(body) or _find_store_host(msg.text)
+        # The purchase link's host first: a coupon or footer link elsewhere in
+        # the message can point at a different shop.
+        store = (
+            _find_store(body)
+            or _find_store_host(extract_purchase_url(msg.text) or "")
+            or _find_store_host(msg.text)
+        )
         method = "pix" if _PIX.search(body) else "unknown"
 
         offer = Offer(
@@ -126,8 +135,9 @@ class GenericParser:
             extracted_by="regex",
             confidence=confidence,
         )
-        # Coupon often sits in the product block; the purchase URL is the first
-        # link (the same boundary offer_body uses). Read both from the raw text.
+        # Coupon often sits in the product block, and the purchase link is not
+        # necessarily the first one (see parse/enrich.py). Read both from the
+        # raw text.
         return enrich_offer(offer, msg.text)
 
 

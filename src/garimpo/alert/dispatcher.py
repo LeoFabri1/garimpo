@@ -135,7 +135,8 @@ class Dispatcher:
         now = now or datetime.now()
         rows = self.conn.execute(
             """
-            SELECT a.id, a.offer_id, a.reason, o.model_key, o.price, o.store
+            SELECT a.id, a.offer_id, a.reason, o.model_key, o.price, o.store,
+                   o.coupon, o.url
             FROM alerts a
             JOIN offers o ON o.id = a.offer_id
             WHERE a.status = 'deferred'
@@ -148,9 +149,12 @@ class Dispatcher:
         lines = [f"🌅 {len(rows)} oferta(s) passaram do filtro durante quiet hours", ""]
         for r in rows[:20]:
             store = r["store"] or "?"
-            lines.append(
-                f"{r['model_key']} — R$ {r['price']:.0f} ({store})"
-            )
+            line = f"{r['model_key']} — R$ {r['price']:.0f} ({store})"
+            if r["coupon"]:
+                line += f" · cupom {r['coupon']}"
+            lines.append(line)
+            if r["url"]:
+                lines.append(f"🔗 {r['url']}")
         if len(rows) > 20:
             lines.append(f"… e mais {len(rows) - 20}")
 

@@ -17,6 +17,8 @@ class Coupon:
     code: str | None
     discount_abs: Decimal | None = None
     discount_pct: Decimal | None = None
+    # Página de resgate, quando o cupom é "clique para pegar" em vez de código.
+    url: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

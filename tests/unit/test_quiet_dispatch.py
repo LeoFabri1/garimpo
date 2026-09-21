@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -9,14 +10,14 @@ from pathlib import Path
 from garimpo.alert.channels.console import ConsoleChannel
 from garimpo.alert.dispatcher import Dispatcher
 from garimpo.models.alert import Level, ScoredOffer
-from garimpo.models.offer import Offer, Price
+from garimpo.models.offer import Coupon, Offer, Price
 from garimpo.settings import AlertLevelSettings, AlertsSettings
 from garimpo.store.db import connect
 from garimpo.store.repo import messages as messages_repo
 from garimpo.store.repo import offers as offers_repo
 
 
-def _offer_row(conn, price: float = 5799) -> tuple[int, ScoredOffer]:
+def _offer_row(conn, price: float = 5799, **offer_kwargs) -> tuple[int, ScoredOffer]:
     sid = messages_repo.ensure_source(conn, tg_id=1)
     rid = messages_repo.insert_raw_message(
         conn,
@@ -32,6 +33,7 @@ def _offer_row(conn, price: float = 5799) -> tuple[int, ScoredOffer]:
         model_key="rtx_5070_ti",
         price=Price(amount=Decimal(str(price)), method="pix"),
         store="kabum",
+        **offer_kwargs,
     )
     oid = offers_repo.insert_offer(conn, raw_id=rid, offer=offer)
     scored = ScoredOffer(
@@ -84,3 +86,25 @@ def test_critical_ignores_quiet_hours(tmp_path: Path) -> None:
     d = Dispatcher(conn, ConsoleChannel(), alerts, dry_run=True)
     result = d.dispatch(scored, offer_id=oid, now=datetime(2026, 8, 1, 1, 0))
     assert result.status == "dry_run"
+
+
+def test_quiet_hours_digest_keeps_link_and_coupon(tmp_path: Path) -> None:
+    conn = connect(tmp_path / "t.db")
+    oid, scored = _offer_row(
+        conn,
+        coupon=Coupon(code="QUEROOFERTA"),
+        url="https://loja.example.com/produto",
+    )
+    alerts = AlertsSettings(
+        channel="console",
+        normal=AlertLevelSettings(percentile=0.15, quiet_hours=[23, 8]),
+        critical=AlertLevelSettings(percentile=0.03, silent=False),
+    )
+    out = io.StringIO()
+    d = Dispatcher(conn, ConsoleChannel(out), alerts, dry_run=True)
+    d.dispatch(scored, offer_id=oid, now=datetime(2026, 8, 1, 1, 0))
+    assert d.flush_deferred(now=datetime(2026, 8, 1, 9, 0)) == 1
+    digest = out.getvalue()
+    assert "cupom QUEROOFERTA" in digest
+    assert "https://loja.example.com/produto" in digest
+    assert "DIGEST" not in digest
