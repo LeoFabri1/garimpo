@@ -109,3 +109,13 @@ def test_out_of_range_is_a_gate_not_a_hint() -> None:
     """No offer beats a wrong one — an implausible price must not be returned."""
     with pytest.raises(MoneyParseError):
         select_price("RTX 5090 por R$ 1727", price_range=(12000, 28000))
+
+
+def test_fan_count_on_the_line_above_is_not_an_installment() -> None:
+    text = "MSI RTX 5070 Ti 16GB SHADOW 3X\nR$ 6,991"
+    assert select_price(text, price_range=(4000, 9000))[0] == Decimal("6991")
+
+
+def test_installment_on_the_same_line_is_still_ignored() -> None:
+    text = "RTX 5070 Ti R$ 6.499 no PIX\nou 12x R$ 599"
+    assert select_price(text, price_range=(500, 9000))[0] == Decimal("6499")

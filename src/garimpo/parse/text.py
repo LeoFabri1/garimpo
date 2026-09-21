@@ -21,6 +21,10 @@ _EMOJI = re.compile(
     flags=re.UNICODE,
 )
 
+# Some channels drop the "R$" and let the emoji be the marker: "💵6,991".
+# Must run before _EMOJI erases it, or the price has no marker left.
+_MONEY_EMOJI = re.compile(r"[\U0001f4b0\U0001f4b5\U0001f4b8]\ufe0f?\s*(?=\d)")
+
 _TG_MARKDOWN = re.compile(r"(\*\*|__|\|\||`)")
 _MULTI_SPACE = re.compile(r"\s+")
 
@@ -32,6 +36,7 @@ def normalize_text(text: str) -> str:
     """
     s = unicodedata.normalize("NFKC", text)
     s = _ZERO_WIDTH.sub("", s)
+    s = _MONEY_EMOJI.sub(" R$ ", s)
     s = _EMOJI.sub(" ", s)
     s = _TG_MARKDOWN.sub("", s)
     s = _MULTI_SPACE.sub(" ", s).strip()

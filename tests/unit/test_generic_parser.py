@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
+import pytest
+
 from garimpo.catalog import ModelIndex, load_gpu_catalog
 from garimpo.models.raw import RawMessage
 from garimpo.parse.generic import GenericParser
@@ -136,3 +138,25 @@ def test_alert_payload_includes_coupon_and_purchase_url() -> None:
     assert offer.coupon is not None
     assert offer.coupon.code == "MAISECONOMIA"
     assert offer.url == "https://example.com/oferta"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        (
+            "O sonho, ja é caro eu sei!\n\n"
+            "Placa de Vídeo NVIDIA GeForce MSI RTX5070TI 16GB GDDR7 SHADOW 3X\n\n"
+            "💵6,991\n\nCupom 90 off aqui\nhttps://cupom.example.com/a\n\n"
+            "Link\nhttps://loja.example.com/produto",
+            Decimal("6991"),
+        ),
+        ("RTX 5070 Ti MSI 16GB\n💰 6.945", Decimal("6945")),
+        # Emoji before an explicit R$ is left alone.
+        ("RTX 5070 Ti MSI 16GB\n💵 R$ 6.945 no PIX", Decimal("6945")),
+    ],
+)
+def test_money_emoji_without_currency_sign(text: str, expected: Decimal) -> None:
+    offer = GenericParser(ModelIndex(load_gpu_catalog())).parse(_msg(text))
+    assert offer is not None
+    assert offer.model_key == "rtx_5070_ti"
+    assert offer.price.amount == expected

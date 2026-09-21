@@ -19,8 +19,10 @@ _NUM = (
 _AMOUNT_BRL = re.compile(rf"R\$\s*({_NUM})", re.IGNORECASE)
 _AMOUNT_REAIS = re.compile(rf"({_NUM})\s*reais?\b", re.IGNORECASE)
 
+# Same line only: "MSI RTX 5070 Ti SHADOW 3X" followed by the price on the next
+# line is a fan count, not "3x de R$ 6.991".
 _INSTALLMENT = re.compile(
-    r"(\d{1,2})\s*[xX×]\s*(?:de\s+)?(?:R\$\s*)?([\d.,]+)",
+    r"(\d{1,2})[^\S\n]*[xX×][^\S\n]*(?:de[^\S\n]+)?(?:R\$[^\S\n]*)?([\d.,]+)",
     re.IGNORECASE,
 )
 

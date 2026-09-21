@@ -99,7 +99,12 @@ class GenericParser:
         assert product is not None
 
         try:
-            amount, listed = select_price(body, price_range=product.price_range)
+            # Line breaks kept: they are what separates a model's "3X" from
+            # the price on the next line (see money._INSTALLMENT).
+            price_text = "\n".join(
+                normalize_text(line) for line in offer_body(msg.text).splitlines()
+            )
+            amount, listed = select_price(price_text, price_range=product.price_range)
         except MoneyParseError:
             return None
 
