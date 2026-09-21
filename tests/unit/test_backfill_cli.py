@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -10,12 +11,21 @@ from garimpo.cli import app
 
 runner = CliRunner()
 
+# Typer forces Rich colours when GITHUB_ACTIONS is set, and the escape codes
+# land inside the text ("-\x1b[0m\x1b[1;36m-telegram"). Passed locally, failed
+# every CI run.
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _plain(output: str) -> str:
+    return _ANSI.sub("", output)
+
 
 def test_backfill_without_source_is_rejected() -> None:
     """Sem CSV e sem --telegram não há o que fazer, e o erro precisa dizer isso."""
     result = runner.invoke(app, ["backfill"])
     assert result.exit_code != 0
-    assert "--telegram" in result.output
+    assert "--telegram" in _plain(result.output)
 
 
 def test_backfill_rejects_csv_and_telegram_together(tmp_path: Path) -> None:
