@@ -104,7 +104,8 @@ async def run_daemon(
     async def _handle(msg: RawMessage) -> None:
         clock.touch()
         resultado = pipeline.process(msg)
-        stats.record(resultado.status)
+        lag_s = (msg.received_at - msg.posted_at).total_seconds() if msg.posted_at else None
+        stats.record(resultado.status, lag_s=lag_s)
         from garimpo.ingest.recovery import set_last_msg_id
 
         set_last_msg_id(pipeline.conn, msg.source_id, msg.tg_msg_id)
@@ -273,14 +274,32 @@ class LiveStats:
     problema barato por um caro.
     """
 
-    __slots__ = ("_contagem", "desde")
+    __slots__ = ("_atrasos", "_contagem", "desde")
 
     def __init__(self) -> None:
         self._contagem: Counter[str] = Counter()
+        self._atrasos: list[float] = []
         self.desde = datetime.now(UTC)
 
-    def record(self, status: str) -> None:
+    def record(self, status: str, *, lag_s: float | None = None) -> None:
         self._contagem[status] += 1
+        if lag_s is not None:
+            self._atrasos.append(lag_s)
+
+    def drain_lag(self) -> dict[str, float]:
+        """Mediana e máximo de (recebida - postada) na janela, em segundos.
+
+        Só mensagens que chegaram pelo evento ao vivo; as do gap recovery são
+        atrasadas por definição e não dizem nada sobre a entrega do Telegram.
+        """
+        atrasos = sorted(self._atrasos)
+        self._atrasos.clear()
+        if not atrasos:
+            return {}
+        return {
+            "lag_p50_s": round(atrasos[len(atrasos) // 2], 1),
+            "lag_max_s": round(atrasos[-1], 1),
+        }
 
     def drain(self) -> tuple[dict[str, int], timedelta]:
         contagem = dict(self._contagem)
@@ -318,6 +337,7 @@ async def activity_pulse(
         except TimeoutError:
             pass
 
+        atraso = stats.drain_lag()
         contagem, janela = stats.drain()
         calado = clock.silent_for()
         log.info(
@@ -325,6 +345,7 @@ async def activity_pulse(
             window_min=round(janela.total_seconds() / 60, 1),
             total=sum(contagem.values()),
             silent_min=round(calado.total_seconds() / 60, 1),
+            **atraso,
             **contagem,
         )
 

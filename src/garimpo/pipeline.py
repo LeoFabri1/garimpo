@@ -46,6 +46,8 @@ def _log_outcome(msg: RawMessage, result: PipelineResult) -> None:
         "source": msg.source_username or msg.source_id,
         "msg_id": msg.tg_msg_id,
     }
+    if msg.posted_at is not None:
+        fields["lag_s"] = round((msg.received_at - msg.posted_at).total_seconds(), 1)
     if result.scored is not None:
         offer = result.scored.offer
         fields["model"] = offer.model_key

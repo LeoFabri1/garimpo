@@ -105,6 +105,7 @@ class TelethonClient:
                 received_at=datetime.now(UTC),
                 source_username=username.lower() if username else (src.username if src else None),
                 parser_hint=src.parser if src else "generic",
+                posted_at=event.message.date if event.message else None,
             )
             if self._handler is not None:
                 result = self._handler(msg)

@@ -15,3 +15,6 @@ class RawMessage:
     received_at: datetime
     source_username: str | None = None
     parser_hint: str | None = None
+    # When Telegram says it was posted. received_at is when we got it; the gap
+    # is ingest lag, logged per message as lag_s.
+    posted_at: datetime | None = None
