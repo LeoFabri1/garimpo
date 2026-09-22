@@ -25,3 +25,5 @@ class ScoredOffer:
     price_per_pt: float | None
     reason: str
     rule_name: str | None = None
+    # The matched rule's `silent` override; None means use the level's.
+    rule_silent: bool | None = None

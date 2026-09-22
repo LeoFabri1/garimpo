@@ -95,9 +95,15 @@ class Dispatcher:
                 detail=rate.detail,
             )
 
-        # Quiet hours: only for NORMAL (critical always sends)
+        # Quiet hours: only for NORMAL (critical always sends), and not for a
+        # rule that asked to ring — holding its alert until morning would
+        # defeat the point.
         quiet = self.alerts.normal.quiet_hours
-        if scored.level == Level.NORMAL and in_quiet_hours(now, quiet):
+        if (
+            scored.level == Level.NORMAL
+            and scored.rule_silent is not False
+            and in_quiet_hours(now, quiet)
+        ):
             alerts_repo.insert_alert(
                 self.conn,
                 offer_id=offer_id,
@@ -113,11 +119,12 @@ class Dispatcher:
                 detail="normal alert deferred until quiet hours end",
             )
 
-        silent = (
-            self.alerts.critical.silent
-            if scored.level == Level.CRITICAL
-            else self.alerts.normal.silent
-        )
+        if scored.rule_silent is not None:
+            silent = scored.rule_silent
+        elif scored.level == Level.CRITICAL:
+            silent = self.alerts.critical.silent
+        else:
+            silent = self.alerts.normal.silent
         self.channel.send(scored, silent=silent)
         status = "dry_run" if self.dry_run else "sent"
         alerts_repo.insert_alert(

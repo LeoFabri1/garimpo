@@ -50,6 +50,7 @@ def watch_rule_from_config(
             critical.min_store_trust if critical.min_store_trust is not None else 0.9
         ),
         stores_exclude=frozenset(cfg.stores_exclude),
+        silent=cfg.silent,
     )
 
 

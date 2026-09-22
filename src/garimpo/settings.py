@@ -50,6 +50,9 @@ class WatchRuleConfig(BaseModel):
     max_price_per_perf: float | None = None
     condition: list[str] = Field(default_factory=lambda: ["new"])
     stores_exclude: list[str] = Field(default_factory=list)
+    # Overrides alerts.<level>.silent for this rule's alerts; a rule set to
+    # false also skips quiet hours. None keeps the level's setting.
+    silent: bool | None = None
 
 
 class ScoringSettings(BaseModel):

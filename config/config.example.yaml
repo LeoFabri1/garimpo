@@ -55,6 +55,7 @@ watch:
   #   category: ram
   #   models: ["Kingston Fury Beast 32GB DDR5 5600"]
   #   max_price: 3000
+  #   silent: false   # por regra: toca mesmo em alerta "normal" e ignora quiet hours
 
 scoring:
   window_days: 90

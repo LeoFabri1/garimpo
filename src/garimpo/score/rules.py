@@ -29,6 +29,7 @@ class WatchRule:
     normal_percentile: float = 0.15
     min_store_trust_critical: float = 0.9
     stores_exclude: frozenset[str] = frozenset()
+    silent: bool | None = None
 
 
 def match_rule(
@@ -127,6 +128,7 @@ def score_offer(
             price_per_pt=ppt,
             reason=reason,
             rule_name=rule.name,
+            rule_silent=rule.silent,
         )
 
     pct = weighted_percentile_rank(
@@ -162,6 +164,7 @@ def score_offer(
         price_per_pt=ppt,
         reason=reason,
         rule_name=rule.name,
+        rule_silent=rule.silent,
     )
 
 
@@ -183,6 +186,7 @@ def _ignore(
         price_per_pt=ppt,
         reason=reason,
         rule_name=rule.name,
+        rule_silent=rule.silent,
     )
 
 
