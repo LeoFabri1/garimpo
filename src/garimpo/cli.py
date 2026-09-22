@@ -190,11 +190,17 @@ def run_cmd(
             n = asyncio.run(run_once(client, pipeline, sources))
             typer.echo(f"processed {n} message(s) (--once)")
         else:
-            typer.echo("garimpo run: listening (Ctrl+C to stop)…")
+            # Through the logger, not echo: under launchd stdout *is*
+            # data/garimpo.log, and a plain-text line there broke
+            # `daemon logs -f | jq .` on every start.
+            import structlog
+
+            log = structlog.get_logger("garimpo.run")
+            log.info("listening", sources=len(sources))
             try:
                 asyncio.run(run_daemon(client, pipeline, sources))
             except KeyboardInterrupt:
-                typer.echo("\nstopped")
+                log.info("stopped")
     except NoSourcesResolvedError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1) from exc
