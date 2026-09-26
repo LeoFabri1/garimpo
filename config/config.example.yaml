@@ -54,13 +54,18 @@ watch:
   #   models: ["Ryzen 7 7800X3D", "Ryzen 7 9800X3D"]
   #   max_price: 2800
 
-  # RAM: kits exatos em catalog/categories/ram.json. Só com esta categoria
-  # no watch a triagem deixa passar mensagens de memória.
-  # - name: ram-32
+  # RAM: catalog/categories/ram.json. Só com esta categoria no watch a triagem
+  # deixa passar mensagens de memória. O pente de 16GB é o SKU Kingston exato
+  # (serve para completar um par); os kits são de marca livre.
+  # - name: ram-16
   #   category: ram
-  #   models: ["Kingston Fury Beast 32GB DDR5 5600"]
-  #   max_price: 3000
+  #   models: ["Kingston Fury Beast 16GB DDR5 5600 CL36"]
+  #   max_price: 1500
   #   silent: false   # por regra: toca mesmo em alerta "normal" e ignora quiet hours
+  # - name: ram-32-kit
+  #   category: ram
+  #   models: ["Kit DDR5 32GB (2x16GB) desktop, qualquer marca/velocidade"]
+  #   max_price: 1200
 
 scoring:
   window_days: 90

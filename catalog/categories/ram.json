@@ -3,7 +3,7 @@
   "meta": {
     "perf_basis": "sem ranking de desempenho: um item por kit, perf fixo em 100",
     "perf_reference": "todos = 100",
-    "updated_at": "2026-09-21",
+    "updated_at": "2026-09-26",
     "category": "ram"
   },
   "products": {
@@ -51,38 +51,43 @@
         "rtx "
       ]
     },
-    "kingston_fury_beast_ddr5_32gb_5600": {
-      "display": "Kingston Fury Beast 32GB DDR5 5600 CL36",
-      "vendor": "kingston",
+    "ddr5_32gb_2x16_kit": {
+      "display": "Kit DDR5 32GB (2x16GB) desktop, qualquer marca/velocidade",
+      "vendor": "any",
       "perf": 100,
       "price_range": [
-        1000,
-        8000
+        300,
+        10000
       ],
       "aliases": [
-        "kf556c36bbe-32",
-        "kf556c36bb-32",
-        "fury beast, 32gb, 5600",
-        "fury beast 32gb ddr5 5600",
-        "fury beast ddr5 32gb 5600",
-        "fury beast, 32gb, ddr5, 5600",
-        "fury beast ddr5, 32gb, 5600",
-        "fury beast 32gb 5600"
+        "(2x16gb)",
+        "2x16gb",
+        "2x 16gb",
+        "2 x 16gb",
+        "2x16 gb",
+        "2 x 16 gb"
+      ],
+      "required_aliases": [
+        "ddr5"
       ],
       "negative_aliases": [
-        "kf556c36bbea",
-        "2x16",
-        "2x32",
-        "64gb",
-        "k2-",
-        "rgb",
-        "cl40",
-        "c40",
+        "ddr4",
+        "ddr3",
         "sodimm",
+        "so-dimm",
         "notebook",
         "laptop",
         "impact",
-        "ddr4",
+        "rdimm",
+        "registrada",
+        "registered",
+        "servidor",
+        "server",
+        "4x16",
+        "4x8",
+        "2x8",
+        "2x32",
+        "64gb",
         "pc gamer",
         "computador",
         "workstation",
