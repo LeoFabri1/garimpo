@@ -57,15 +57,25 @@ watch:
   # RAM: catalog/categories/ram.json. Só com esta categoria no watch a triagem
   # deixa passar mensagens de memória. O pente de 16GB é o SKU Kingston exato
   # (serve para completar um par); os kits são de marca livre.
+  #
+  # Cuidado com o teto: ele descarta a oferta ANTES do score, então um teto
+  # abaixo do mercado mata a regra inteira e o histórico nunca se forma. Os
+  # números abaixo são o mercado de setembro/2026 (1x16 ~R$ 2.000, kit 2x16
+  # ~R$ 4.000, kit 2x32 ~R$ 8.500) e envelhecem: DDR5 subiu 161% em 9 meses.
+  #
+  # `silent: true` enquanto o modelo não tiver `scoring.min_samples` amostras:
+  # sem baseline o alerta é só "abaixo do teto", e apitar nisso é apitar em
+  # preço normal de loja. A mensagem chega no canal de qualquer forma.
   # - name: ram-16
   #   category: ram
   #   models: ["Kingston Fury Beast 16GB DDR5 5600 CL36"]
-  #   max_price: 1500
-  #   silent: false   # por regra: toca mesmo em alerta "normal" e ignora quiet hours
+  #   max_price: 2100
+  #   silent: true
   # - name: ram-32-kit
   #   category: ram
   #   models: ["Kit DDR5 32GB (2x16GB) desktop, qualquer marca/velocidade"]
-  #   max_price: 1200
+  #   max_price: 4200
+  #   silent: true
 
 scoring:
   window_days: 90
