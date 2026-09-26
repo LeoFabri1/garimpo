@@ -115,15 +115,25 @@ async def backfill_telegram(
                 parser=resolved.parser,
             )
 
-            if get_last_msg_id(pipe.conn, resolved.tg_id) == 0:
-                try:
-                    inicio = await client.msg_id_at(resolved, days)
-                except NotImplementedError:
-                    inicio = 0
+            # O ponteiro precisa RECUAR para `days` atrás, mesmo numa fonte já
+            # ingerida. Antes isto só valia para last_msg_id == 0, e como
+            # `fetch_since` pede o que é mais NOVO que o ponteiro, um backfill
+            # sobre fonte ativa não lia nada e imprimia "✓ 0 mensagens" — que
+            # se lê como "o canal não tinha nada". Foi assim que um apagão de
+            # 16 dias em 7 das 8 fontes ficou aparentemente irrecuperável.
+            atual = get_last_msg_id(pipe.conn, resolved.tg_id)
+            try:
+                inicio = await client.msg_id_at(resolved, days)
+            except NotImplementedError:
+                inicio = 0
+                if atual == 0:
                     progress(f"  ⚠ {label}: backend sem msg_id_at — começando do início do canal")
-                if inicio:
-                    set_last_msg_id(pipe.conn, resolved.tg_id, inicio)
-                    progress(f"  {label}: começando em msg_id={inicio} (~{days}d atrás)")
+            # Só recua. Avançar pularia calado as mensagens entre os dois
+            # pontos, e reprocessar o que já existe é barato: a inserção de
+            # raw_message devolve a linha existente no conflito.
+            if inicio and (atual == 0 or inicio < atual):
+                set_last_msg_id(pipe.conn, resolved.tg_id, inicio)
+                progress(f"  {label}: voltando para msg_id={inicio} (~{days}d atrás)")
 
             n = 0
             for _ in range(max_batches):

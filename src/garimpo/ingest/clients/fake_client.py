@@ -16,6 +16,7 @@ class FakeMTProtoClient:
         self.sent: list[tuple[str, bool]] = []
         self._inbox: dict[str, list[RawMessage]] = {}
         self.authorized = True
+        self.msg_id_at_value = 0
 
     async def start(self) -> None:
         self.started = True
@@ -34,6 +35,9 @@ class FakeMTProtoClient:
         msgs = [m for m in self._inbox.get(key, []) if m.tg_msg_id > min_id]
         msgs.sort(key=lambda m: m.tg_msg_id)
         return msgs[:limit]
+
+    async def msg_id_at(self, source: SourceRef, days_ago: int) -> int:
+        return self.msg_id_at_value
 
     async def send_self(self, text: str, *, silent: bool = False) -> None:
         self.sent.append((text, silent))
