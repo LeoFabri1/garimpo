@@ -140,3 +140,106 @@ def test_real_cards_still_resolve(text: str, expected: str) -> None:
 def test_9070_gre_is_not_9070_or_xt(text: str) -> None:
     """GRE is a different SKU (12GB); snapping it onto 9070/XT poisons both."""
     assert ModelIndex(load_gpu_catalog()).resolve(text.lower()) is None
+
+
+# --- Nomes colados: "5070Ti", "RTX4060", "ryzen5 5600" -----------------------
+#
+# Aparecem pouco nos canais, mas quando aparecem a oferta é perdida inteira.
+# Os produtos abaixo não têm alias colado escrito à mão — quem resolve é o
+# alias que trata o próprio espaço como opcional.
+#
+# Os textos mantêm "notebook" vizinho do modelo de propósito: casar o token
+# de classe a distância ("Notebook Gamer Lenovo LOQ ... RTX 4060") não
+# funciona hoje nem com espaços, e é outro problema.
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Notebook RTX4050 Acer Nitro V i5 16GB", "notebook_rtx_4050"),
+        ("Notebook RTX4060 Lenovo LOQ i7 512GB", "notebook_rtx_4060"),
+        ("Lenovo LOQ RTX4070 Notebook Ryzen 7", "notebook_rtx_4070"),
+        ("Laptop RTX4080 MSI Raider i9", "notebook_rtx_4080"),
+        ("Notebook RTX3050 Acer Nitro 5 i5", "notebook_rtx_3050"),
+    ],
+)
+def test_glued_notebook_gpu_resolves(text: str, expected: str) -> None:
+    index = ModelIndex(load_catalog_for_watch(["gpu", "notebook"]))
+    result = index.resolve(text.lower())
+    assert result is not None
+    assert result.model_key == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Placa de Video Sapphire Pulse RX7600 8GB GDDR6", "rx_7600"),
+        ("Placa de Video Intel ARCB580 Limited Edition 12GB", "arc_b580"),
+    ],
+)
+def test_glued_desktop_gpu_resolves(text: str, expected: str) -> None:
+    result = ModelIndex(load_gpu_catalog()).resolve(text.lower())
+    assert result is not None
+    assert result.model_key == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Processador AMD Ryzen5 5600 AM4 sem video", "ryzen_5_5600"),
+        ("Processador AMD Ryzen5 7600 AM5", "ryzen_5_7600"),
+    ],
+)
+def test_glued_cpu_resolves(text: str, expected: str) -> None:
+    index = ModelIndex(load_catalog_for_watch(["gpu", "cpu"]))
+    result = index.resolve(text.lower())
+    assert result is not None
+    assert result.model_key == expected
+
+
+def test_glued_pass_still_honours_the_ti_suffix() -> None:
+    """Colar não pode deixar o irmão mais curto vencer o mais específico."""
+    result = ModelIndex(load_gpu_catalog()).resolve("sapphire rx7600xt 16gb")
+    assert result is not None
+    assert result.model_key == "rx_7600_xt"
+
+
+def test_exact_pass_declines_a_letter_suffix_false_positive() -> None:
+    """"rtx 5070 titan" contém "rtx 5070 ti" — o limite tira o passe exato fora.
+
+    O fuzzy ainda entrega rtx_5070_ti aqui, porque `partial_ratio` dá 100 para
+    um alias que é substring do texto. Consertar isso é mexer no corte do
+    fuzzy, não no casamento de alias, e fica para outra mudança.
+    """
+    result = ModelIndex(load_gpu_catalog()).resolve("placa de video rtx 5070 titan oc")
+    assert result is not None
+    assert result.method == "fuzzy"
+
+
+def test_boundary_still_allows_a_digit_after_the_alias() -> None:
+    """Texto totalmente colado: o "16gb" logo depois do "ti" é legítimo."""
+    result = ModelIndex(load_gpu_catalog()).resolve("msi rtx5070ti16gb shadow")
+    assert result is not None
+    assert result.model_key == "rtx_5070_ti"
+
+
+def test_glued_notebook_does_not_leak_into_the_desktop_card() -> None:
+    index = ModelIndex(load_catalog_for_watch(["gpu", "notebook"]))
+    result = index.resolve("notebook rtx4060 i7")
+    assert result is not None
+    assert result.model_key == "notebook_rtx_4060"
+
+
+def test_glued_notebook_does_not_leak_into_a_sibling_sku() -> None:
+    index = ModelIndex(load_catalog_for_watch(["gpu", "notebook"]))
+    result = index.resolve("notebook rtx4050 i5 8gb")
+    assert result is not None
+    assert result.model_key == "notebook_rtx_4050"
+
+
+def test_spaced_names_keep_the_plain_exact_method() -> None:
+    """O passe colado é aditivo: não deve capturar o que já funcionava."""
+    result = ModelIndex(load_gpu_catalog()).resolve("geforce rtx 5070 ti asus dual")
+    assert result is not None
+    assert result.model_key == "rtx_5070_ti"
+    assert result.method == "exact"

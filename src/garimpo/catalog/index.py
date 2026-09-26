@@ -28,6 +28,7 @@ class ModelIndex:
         pairs.sort(key=lambda p: len(p[0]), reverse=True)
         self._pairs = pairs
         self._alias_list = [a for a, _ in pairs]
+        self._patterns = [(_alias_pattern(a), a, k) for a, k in pairs]
 
     def get(self, model_key: str) -> Product | None:
         return self._catalog.products.get(model_key)
@@ -35,8 +36,8 @@ class ModelIndex:
     def resolve(self, text: str, *, fuzzy_cutoff: int = 88) -> ResolveResult | None:
         lowered = text.lower()
 
-        for alias, key in self._pairs:
-            if alias not in lowered:
+        for pattern, alias, key in self._patterns:
+            if pattern.search(lowered) is None:
                 continue
             product = self._catalog.products[key]
             if _hits_negative(lowered, alias, product.negative_aliases):
@@ -72,6 +73,37 @@ class ModelIndex:
             matched_alias=alias,
             method="fuzzy",
         )
+
+
+def _alias_pattern(alias: str) -> re.Pattern[str]:
+    """Match an alias whose spaces the channel may have dropped.
+
+    Channels write the same card three ways — "RTX 4060", "RTX4060",
+    "rtx 4060" — and a plain substring test only finds the spelling someone
+    remembered to type into the catalog. Nine products had no glued alias, so
+    "notebook rtx4060 i7" reached the exact pass unmatched and was decided by
+    the fuzzy scorer instead: right key, 0.97 confidence, on the same
+    `partial_ratio` that `_digits_agree` below exists to police. Replaying the
+    whole message archive, 20 real listings took that route.
+
+    So each space in the alias becomes optional. The text itself is never
+    touched: squashing it would destroy the boundaries we need, because
+    "notebook rtx4060 i7" squashed reads "notebookrtx4060i7" and the "i" of
+    "i7" then looks like part of the model name.
+
+    The lookahead is what keeps the suffix honest: an alias may run into a
+    digit ("rtx5070ti16gb" is one card) but never into a letter, so
+    "rtx 5070 titan" no longer answers for the alias "rtx 5070 ti" — which it
+    did, as a plain substring, long before spaces became optional.
+
+    `negative_aliases` deliberately do NOT come through here. The lookahead
+    makes matching stricter, which is the safe direction for an alias and the
+    dangerous one for a negative: with it, the negative "5600g" stopped
+    seeing "Ryzen 5 5600GT" and twenty of those landed on `ryzen_5_5600`.
+    A negative stays a greedy substring.
+    """
+    body = r"\s*".join(re.escape(part) for part in alias.split())
+    return re.compile(body + r"(?![a-z])")
 
 
 _MODEL_NUMBER = re.compile(r"\d{3,4}")
