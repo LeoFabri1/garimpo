@@ -40,6 +40,10 @@
           "negative_aliases": {
             "type": "array",
             "items": { "type": "string" }
+          },
+          "required_aliases": {
+            "type": "array",
+            "items": { "type": "string" }
           }
         }
       }

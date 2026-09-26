@@ -39,10 +39,15 @@ watch:
     condition: [new]        # NOTE: not applied yet — stored on the offer, not filtered
     stores_exclude: ["marketplace_generico", "aliexpress"]
 
+  # Notebook: o nome em `models` tem de trazer "Notebook" ou "Laptop", porque
+  # é esse token que o produto exige (required_aliases em
+  # catalog/categories/notebook.json). "RTX 4050" sozinho não resolve — o
+  # mesmo alias pertence à placa avulsa.
   # - name: notebook-gamer
   #   category: notebook
-  #   models: ["Notebook RTX 4060", "Notebook RTX 4070"]
-  #   max_price: 8000
+  #   models: ["Notebook RTX 4050"]
+  #   max_price: 5600
+  #   silent: true    # sem histórico ainda: espere 12 amostras antes de tocar
 
   # - name: cpu-x3d
   #   category: cpu

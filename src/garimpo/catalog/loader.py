@@ -63,6 +63,7 @@ def load_catalog_file(path: Path) -> Catalog:
             perf=float(item["perf"]),
             aliases=tuple(a.lower() for a in item["aliases"]),
             negative_aliases=tuple(a.lower() for a in item.get("negative_aliases", [])),
+            required_aliases=tuple(a.lower() for a in item.get("required_aliases", [])),
             vram_gb=item.get("vram_gb"),
             generation=item.get("generation"),
             msrp_brl=item.get("msrp_brl"),

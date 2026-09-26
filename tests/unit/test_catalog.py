@@ -243,3 +243,65 @@ def test_spaced_names_keep_the_plain_exact_method() -> None:
     assert result is not None
     assert result.model_key == "rtx_5070_ti"
     assert result.method == "exact"
+
+
+# --- required_aliases: o token de classe longe do modelo --------------------
+#
+# Anúncio de notebook quase nunca encosta "Notebook" no nome da GPU — o modelo
+# aparece sozinho, quinze palavras depois. Exigir os dois juntos num alias só
+# custou 231 das 251 mensagens de notebook do arquivo. Agora o alias carrega só
+# o modelo e `required_aliases` cobra o token de classe em qualquer posição.
+
+NOTEBOOK_REAL = [
+    (
+        "Notebook Gamer Acer Nitro V15 ANV15-52-56PD Intel Core i5-13420H de 13ªG "
+        "8GB RAM 512GB SSD RTX4050 Windows 11 15.6”",
+        "notebook_rtx_4050",
+    ),
+    (
+        "Notebook Gamer Acer Predator Helios Neo PHN16-72-75TX Intel Core "
+        "i7-14700HX de 14ªG 32GB RAM 512GB SSD RTX4070 W11 Home 16",
+        "notebook_rtx_4070",
+    ),
+    (
+        "Notebook Gamer Lenovo LOQ 15IRX9 i7-13650HX 16GB 512GB SSD RTX 4060 "
+        "Windows 11",
+        "notebook_rtx_4060",
+    ),
+    (
+        "Laptop ASUS TUF Gaming A15 Ryzen 7 7435HS 16GB 512GB RTX 3050 6GB",
+        "notebook_rtx_3050",
+    ),
+]
+
+
+@pytest.mark.parametrize(("text", "expected"), NOTEBOOK_REAL)
+def test_class_token_far_from_the_model(text: str, expected: str) -> None:
+    index = ModelIndex(load_catalog_for_watch(["gpu", "notebook"]))
+    result = index.resolve(text.lower())
+    assert result is not None
+    assert result.model_key == expected
+
+
+def test_desktop_card_keeps_the_shared_alias() -> None:
+    """"rtx 4060" agora pertence a dois produtos; sem "notebook" é a avulsa."""
+    index = ModelIndex(load_catalog_for_watch(["gpu", "notebook"]))
+    result = index.resolve("placa de video asus dual rtx 4060 oc 8gb gddr6")
+    assert result is not None
+    assert result.model_key == "rtx_4060"
+
+
+def test_notebook_product_needs_its_class_token() -> None:
+    """Sem "notebook" no texto o produto de notebook não pode responder.
+
+    Não existe RTX 4050 avulsa no catálogo, então o resultado certo é nada —
+    e não `notebook_rtx_4050`.
+    """
+    index = ModelIndex(load_catalog_for_watch(["gpu", "notebook"]))
+    assert index.resolve("placa de video rtx 4050 8gb") is None
+
+
+def test_notebook_still_rejects_a_sibling_sku_in_the_same_text() -> None:
+    index = ModelIndex(load_catalog_for_watch(["gpu", "notebook"]))
+    text = "notebook gamer rtx 4050 melhor que a rtx 4060 da geracao passada"
+    assert index.resolve(text.lower()) is None

@@ -40,6 +40,8 @@ class ModelIndex:
             if pattern.search(lowered) is None:
                 continue
             product = self._catalog.products[key]
+            if _lacks_required(lowered, product.required_aliases):
+                continue
             if _hits_negative(lowered, alias, product.negative_aliases):
                 continue
             return ResolveResult(
@@ -65,6 +67,8 @@ class ModelIndex:
             return None
         key = next(k for a, k in self._pairs if a == alias)
         product = self._catalog.products[key]
+        if _lacks_required(lowered, product.required_aliases):
+            return None
         if _hits_negative(lowered, alias, product.negative_aliases):
             return None
         return ResolveResult(
@@ -126,6 +130,25 @@ def _digits_agree(text: str, alias: str) -> bool:
         return True
     found = set(_MODEL_NUMBER.findall(text))
     return bool(wanted & found)
+
+
+def _lacks_required(text: str, required: tuple[str, ...]) -> bool:
+    """A product may demand a token the alias does not carry.
+
+    A notebook ad almost never puts "Notebook" next to the GPU name: the model
+    stands alone fifteen words later, as in "Notebook Gamer Acer Nitro V15
+    ANV15-52-56PD Intel Core i5-13420H de 13ªG 8GB RAM 512GB SSD RTX4050".
+    Bundling both into one alias cost 231 of the 251 notebook messages in the
+    archive, because the two halves are never adjacent.
+
+    So the alias carries the model and the class token is demanded separately,
+    from anywhere in the text. One of them is enough — "notebook" or "laptop".
+
+    This is also what lets "rtx 4060" belong to two products at once: the
+    desktop card lists the same token as a negative, so exactly one of the two
+    can answer any given text.
+    """
+    return bool(required) and not any(token in text for token in required)
 
 
 def _hits_negative(text: str, matched_alias: str, negatives: tuple[str, ...]) -> bool:
