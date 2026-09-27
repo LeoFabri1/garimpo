@@ -238,7 +238,7 @@ def test_bark_posts_a_critical_repeating_push() -> None:
 
 def test_bark_raises_on_api_error() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json={"code": 400, "message": "device key not found"})
+        return httpx.Response(400, json={"code": 400, "message": "device key not found"})
 
     bark = BarkChannel(
         key="X", server="https://bark.example", transport=httpx.MockTransport(handler)

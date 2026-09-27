@@ -47,7 +47,12 @@ class BarkChannel:
             payload["url"] = offer.url
         with httpx.Client(timeout=self._timeout, transport=self._transport) as client:
             resp = client.post(f"{self._server}/push", json=payload)
-            resp.raise_for_status()
+        # Bark answers errors as HTTP 4xx with the reason in the JSON body
+        # ("device token not found"); raise_for_status alone would drop it.
+        try:
             data = resp.json()
-            if data.get("code") != 200:
-                raise RuntimeError(f"Bark error: {data.get('message', data)}")
+        except ValueError:
+            resp.raise_for_status()
+            raise
+        if data.get("code") != 200:
+            raise RuntimeError(f"Bark error: {data.get('message', data)}")
