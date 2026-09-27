@@ -30,6 +30,8 @@ class WatchRule:
     min_store_trust_critical: float = 0.9
     stores_exclude: frozenset[str] = frozenset()
     silent: bool | None = None
+    always_alert: bool = False
+    siren: bool = False
 
 
 def match_rule(
@@ -129,6 +131,8 @@ def score_offer(
             reason=reason,
             rule_name=rule.name,
             rule_silent=rule.silent,
+        rule_always_alert=rule.always_alert,
+        rule_siren=rule.siren,
         )
 
     pct = weighted_percentile_rank(
@@ -144,6 +148,9 @@ def score_offer(
     if pct <= rule.critical_percentile and store_trust >= rule.min_store_trust_critical:
         level = Level.CRITICAL
     elif pct <= rule.normal_percentile:
+        level = Level.NORMAL
+    elif rule.always_alert:
+        # max_price was already checked above: under the ceiling is enough.
         level = Level.NORMAL
     else:
         level = Level.IGNORE
@@ -165,6 +172,8 @@ def score_offer(
         reason=reason,
         rule_name=rule.name,
         rule_silent=rule.silent,
+        rule_always_alert=rule.always_alert,
+        rule_siren=rule.siren,
     )
 
 
@@ -187,6 +196,8 @@ def _ignore(
         reason=reason,
         rule_name=rule.name,
         rule_silent=rule.silent,
+        rule_always_alert=rule.always_alert,
+        rule_siren=rule.siren,
     )
 
 

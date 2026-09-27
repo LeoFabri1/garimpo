@@ -117,6 +117,9 @@ def run_doctor(*, config: Path | None = None, quick: bool = False) -> list[Check
         results.append(CheckResult(True, "watch rules", f"{len(settings.watch)} regra(s)"))
 
     results.append(_check_alert_channel(settings))
+    siren_check = _check_siren(settings)
+    if siren_check is not None:
+        results.append(siren_check)
 
     # Warn, not fail: --dry-run and -m are legitimate without any source.
     enabled_sources = [s for s in settings.sources if s.enabled]
@@ -192,6 +195,24 @@ def _check_alert_channel(settings: Settings) -> CheckResult:
             False, "canal de alerta", f"webhook, mas falta no .env: {wh.url_env}"
         )
     return CheckResult(True, "canal de alerta", "webhook")
+
+
+def _check_siren(settings: Settings) -> CheckResult | None:
+    """Only when some rule asks for the siren: a missing key means the rule
+    that matters most would ping Telegram quietly and nothing else."""
+    from garimpo.settings import SirenSettings
+
+    rules = [r.name or "?" for r in settings.watch if r.siren]
+    if not rules:
+        return None
+    siren = settings.alerts.siren or SirenSettings()
+    if not os.environ.get(siren.key_env):
+        return CheckResult(
+            False,
+            "sirene (Bark)",
+            f"{', '.join(rules)} pede sirene, mas falta no .env: {siren.key_env}",
+        )
+    return CheckResult(True, "sirene (Bark)", f"{', '.join(rules)} → {siren.server}")
 
 
 _RESOLVE_TIMEOUT_S = 15.0

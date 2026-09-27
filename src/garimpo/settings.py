@@ -53,6 +53,12 @@ class WatchRuleConfig(BaseModel):
     # Overrides alerts.<level>.silent for this rule's alerts; a rule set to
     # false also skips quiet hours. None keeps the level's setting.
     silent: bool | None = None
+    # Every offer that passes the filters and sits under max_price alerts
+    # (at least NORMAL), whatever the percentile says; also skips the rate
+    # limit. For a hunt where the ceiling IS the decision.
+    always_alert: bool = False
+    # Also ring the siren (alerts.siren, Bark critical push) for this rule.
+    siren: bool = False
 
 
 class ScoringSettings(BaseModel):
@@ -85,10 +91,17 @@ class WebhookSettings(BaseModel):
     url_env: str = "WEBHOOK_URL"
 
 
+class SirenSettings(BaseModel):
+    key_env: str = "BARK_KEY"
+    server: str = "https://api.day.app"
+
+
 class AlertsSettings(BaseModel):
     channel: Literal["saved_messages", "bot", "webhook", "console"] = "console"
     bot: BotSettings | None = None
     webhook: WebhookSettings | None = None
+    # Extra loud push for rules with `siren: true`; fires next to `channel`.
+    siren: SirenSettings | None = None
     critical: AlertLevelSettings = Field(
         default_factory=lambda: AlertLevelSettings(
             percentile=0.03, silent=False, min_store_trust=0.9

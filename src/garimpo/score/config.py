@@ -51,6 +51,8 @@ def watch_rule_from_config(
         ),
         stores_exclude=frozenset(cfg.stores_exclude),
         silent=cfg.silent,
+        always_alert=cfg.always_alert,
+        siren=cfg.siren,
     )
 
 

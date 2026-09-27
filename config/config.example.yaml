@@ -49,6 +49,18 @@ watch:
   #   max_price: 5600
   #   silent: true    # sem histórico ainda: espere 12 amostras antes de tocar
 
+  # Caça em que o teto É a decisão: `always_alert` alerta tudo que passar nos
+  # filtros abaixo de max_price, mesmo que o percentil ache caro, e fura o
+  # max_per_hour. `siren` toca também a sirene do Bark (alerts.siren) — push
+  # crítico que ignora o silencioso e o Foco do iPhone e toca por 30s.
+  # - name: gpu-5090
+  #   category: gpu
+  #   models: ["RTX 5090"]
+  #   max_price: 25000
+  #   silent: false
+  #   always_alert: true
+  #   siren: true
+
   # - name: cpu-x3d
   #   category: cpu
   #   models: ["Ryzen 7 7800X3D", "Ryzen 7 9800X3D"]
@@ -93,6 +105,10 @@ alerts:
     chat_id_env: TG_CHAT_ID
   # webhook:
   #   url_env: WEBHOOK_URL
+  # Sirene para regras com `siren: true`. App Bark (iOS), key no .env.
+  # siren:
+  #   key_env: BARK_KEY
+  #   server: https://api.day.app
   critical:
     percentile: 0.01
     silent: false

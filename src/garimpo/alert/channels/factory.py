@@ -5,7 +5,7 @@ from __future__ import annotations
 from garimpo.alert.channels.base import Channel
 from garimpo.alert.channels.console import ConsoleChannel
 from garimpo.ingest.base import MTProtoClient
-from garimpo.settings import BotSettings, Settings, WebhookSettings
+from garimpo.settings import BotSettings, Settings, SirenSettings, WebhookSettings
 
 
 def build_channel(
@@ -51,3 +51,14 @@ def build_channel(
         return WebhookChannel(url=url)
 
     return ConsoleChannel()
+
+
+def build_siren(settings: Settings) -> Channel | None:
+    """Bark siren for `siren: true` rules; None when BARK_KEY is unset."""
+    siren = settings.alerts.siren or SirenSettings()
+    key = settings.env(siren.key_env)
+    if not key:
+        return None
+    from garimpo.alert.channels.bark import BarkChannel
+
+    return BarkChannel(key=key, server=siren.server)

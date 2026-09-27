@@ -27,3 +27,5 @@ class ScoredOffer:
     rule_name: str | None = None
     # The matched rule's `silent` override; None means use the level's.
     rule_silent: bool | None = None
+    rule_always_alert: bool = False
+    rule_siren: bool = False

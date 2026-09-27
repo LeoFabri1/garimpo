@@ -6,12 +6,16 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
+import structlog
+
 from garimpo.alert.channels.base import Channel
 from garimpo.alert.cooldown import check_cooldown, check_rate_limit
 from garimpo.alert.quiet import in_quiet_hours
 from garimpo.models.alert import Level, ScoredOffer
 from garimpo.settings import AlertsSettings
 from garimpo.store.repo import alerts as alerts_repo
+
+log = structlog.get_logger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,11 +33,13 @@ class Dispatcher:
         alerts: AlertsSettings,
         *,
         dry_run: bool = False,
+        siren: Channel | None = None,
     ) -> None:
         self.conn = conn
         self.channel = channel
         self.alerts = alerts
         self.dry_run = dry_run
+        self.siren = siren
 
     def dispatch(
         self,
@@ -72,7 +78,7 @@ class Dispatcher:
         rate = check_rate_limit(
             self.conn, now=now, max_per_hour=self.alerts.max_per_hour
         )
-        if not rate.allow:
+        if not rate.allow and not scored.rule_always_alert:
             alerts_repo.insert_alert(
                 self.conn,
                 offer_id=offer_id,
@@ -125,6 +131,8 @@ class Dispatcher:
             silent = self.alerts.critical.silent
         else:
             silent = self.alerts.normal.silent
+        if scored.rule_siren:
+            self._ring_siren(scored)
         self.channel.send(scored, silent=silent)
         status = "dry_run" if self.dry_run else "sent"
         alerts_repo.insert_alert(
@@ -136,6 +144,17 @@ class Dispatcher:
             sent_at=now,
         )
         return DispatchResult(status=status)
+
+    def _ring_siren(self, scored: ScoredOffer) -> None:
+        # Before the main channel, and never fatal: a Bark outage must not
+        # cost the Telegram message, nor a Telegram outage the siren.
+        if self.siren is None:
+            log.warning("siren_not_configured", rule=scored.rule_name)
+            return
+        try:
+            self.siren.send(scored)
+        except Exception as exc:  # noqa: BLE001
+            log.error("siren_failed", rule=scored.rule_name, error=str(exc))
 
     def flush_deferred(self, *, now: datetime | None = None) -> int:
         """Send a single digest for deferred normal alerts and mark them sent."""

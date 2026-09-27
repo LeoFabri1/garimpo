@@ -85,16 +85,20 @@ class Pipeline:
     ) -> None:
         self.settings = settings
         self.dry_run = dry_run
+        siren: Channel | None = None
         if channel is not None:
             self.channel = channel
         else:
-            from garimpo.alert.channels.factory import build_channel
+            from garimpo.alert.channels.factory import build_channel, build_siren
 
             self.channel = build_channel(
                 settings,
                 client=client,
                 force_console=dry_run or settings.alerts.channel == "console",
             )
+            # Same rule as the main channel: a dry-run never reaches a phone.
+            if not dry_run:
+                siren = build_siren(settings)
         categories = sorted({r.category for r in settings.watch if getattr(r, "category", None)})
         self.categories = frozenset(categories)
         self.catalog = load_catalog_for_watch(categories)
@@ -113,6 +117,7 @@ class Pipeline:
             self.channel,
             settings.alerts,
             dry_run=dry_run,
+            siren=siren,
         )
 
     def close(self) -> None:
